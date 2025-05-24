@@ -119,6 +119,11 @@ class Vehicle(models.Model):
         on_delete=models.CASCADE,
         related_name='vehicles'
     )
+    generation = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="Model generation (e.g., 'Gen 3', '2nd Gen', 'Mk IV') - use when generation affects parts compatibility"
+    )
     trim = models.ForeignKey(
         Trim,
         on_delete=models.CASCADE,
@@ -170,11 +175,13 @@ class Vehicle(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['year', 'make', 'model', 'trim']
-        unique_together = ['year', 'make', 'model', 'trim', 'engine']
+        ordering = ['year', 'make', 'model', 'generation', 'trim']
+        unique_together = ['year', 'make', 'model', 'generation', 'trim', 'engine']
 
     def __str__(self):
         base_str = f"{self.year} {self.make.name} {self.model.name}"
+        if self.generation:
+            base_str += f" {self.generation}"
         if self.trim:
             base_str += f" {self.trim.name}"
         if self.engine:

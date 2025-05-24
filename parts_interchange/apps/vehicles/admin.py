@@ -52,14 +52,14 @@ class TrimAdmin(admin.ModelAdmin):
 
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
-    list_display = ['year', 'make', 'model', 'trim', 'engine', 'transmission_type', 'is_active']
-    list_filter = ['year', 'make', 'transmission_type', 'drivetrain', 'is_active', 'created_at']
-    search_fields = ['make__name', 'model__name', 'trim__name', 'engine__name']
+    list_display = ['year', 'make', 'model', 'generation', 'trim', 'engine', 'transmission_type', 'is_active']
+    list_filter = ['year', 'make', 'generation', 'transmission_type', 'drivetrain', 'is_active', 'created_at']
+    search_fields = ['make__name', 'model__name', 'generation', 'trim__name', 'engine__name']
     readonly_fields = ['created_at', 'updated_at']
     
     fieldsets = (
         ('Vehicle Identification', {
-            'fields': ('year', 'make', 'model', 'trim', 'engine')
+            'fields': ('year', 'make', 'model', 'generation', 'trim', 'engine')
         }),
         ('Drivetrain', {
             'fields': ('transmission_type', 'drivetrain')
