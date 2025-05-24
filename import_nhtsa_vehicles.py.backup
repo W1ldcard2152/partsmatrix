@@ -1,0 +1,231 @@
+"""
+Django management command to populate vehicle data from NHTSA API
+Usage: python manage.py import_nhtsa_vehicles
+"""
+
+import requests
+import time
+from django.core.management.base import BaseCommand
+from django.db import transaction
+from apps.vehicles.models import Make, Model, Engine, Trim, Vehicle
+
+
+class Command(BaseCommand):
+    help = 'Import vehicle data from NHTSA API'
+    
+    def __init__(self):
+        super().__init__()
+        self.base_url = 'https://vpic.nhtsa.dot.gov/api'
+        
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--years',
+            type=str,
+            default='1990-2024',
+            help='Year range to import (e.g., "1990-2024" or "2020")'
+        )
+        parser.add_argument(
+            '--makes',
+            type=str,
+            help='Comma-separated list of makes to import (default: all)'
+        )
+        parser.add_argument(
+            '--dry-run',
+            action='store_true',
+            help='Show what would be imported without making changes'
+        )
+        parser.add_argument(
+            '--batch-size',
+            type=int,
+            default=100,
+            help='Number of records to process in each batch'
+        )
+        
+    def handle(self, *args, **options):
+        self.dry_run = options['dry_run']
+        self.batch_size = options['batch_size']
+        
+        if self.dry_run:
+            self.stdout.write(self.style.WARNING('DRY RUN MODE - No data will be saved'))
+        
+        # Parse year range
+        years = self.parse_years(options['years'])
+        makes_filter = options['makes'].split(',') if options['makes'] else None
+        
+        self.stdout.write(f'Importing vehicles for years: {min(years)}-{max(years)}')
+        
+        # Step 1: Import makes
+        makes_data = self.get_makes()
+        if makes_filter:
+            makes_data = [m for m in makes_data if m['Make_Name'] in makes_filter]
+        
+        self.stdout.write(f'Found {len(makes_data)} makes to process')
+        
+        for make_data in makes_data:
+            self.import_make_data(make_data, years)
+            
+    def parse_years(self, year_string):
+        """Parse year range string into list of years"""
+        if '-' in year_string:
+            start, end = map(int, year_string.split('-'))
+            return list(range(start, end + 1))
+        else:
+            return [int(year_string)]
+    
+    def get_makes(self):
+        """Get all vehicle makes from NHTSA"""
+        url = f'{self.base_url}/vehicles/GetMakesForVehicleType/car?format=json'
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()['Results']
+    
+    def get_models_for_make(self, make_name):
+        """Get all models for a specific make"""
+        url = f'{self.base_url}/vehicles/GetModelsForMake/{make_name}?format=json'
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()['Results']
+    
+    def get_vehicle_types_for_make_year(self, make, year):
+        """Get vehicle types for make/year combination"""
+        url = f'{self.base_url}/vehicles/GetVehicleTypesForMakeYear/make/{make}/year/{year}?format=json'
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()['Results']
+    
+    def decode_sample_vins(self, make, model, year):
+        """
+        Generate and decode sample VINs to get detailed specs
+        This is a simplified approach - in practice you'd want more sophisticated VIN generation
+        """
+        # This is a placeholder - you'd need actual VIN samples or generation logic
+        sample_vins = self.generate_sample_vins(make, model, year)
+        decoded_data = []
+        
+        for vin in sample_vins[:5]:  # Limit to avoid API throttling
+            try:
+                url = f'{self.base_url}/vehicles/DecodeVin/{vin}?format=json'
+                response = requests.get(url)
+                if response.status_code == 200:
+                    data = response.json()['Results']
+                    decoded_data.append(self.parse_vin_decode(data))
+                time.sleep(0.1)  # Rate limiting
+            except Exception as e:
+                self.stdout.write(f'Error decoding VIN {vin}: {e}')
+                
+        return decoded_data
+    
+    def generate_sample_vins(self, make, model, year):
+        """
+        Generate sample VINs for testing
+        Note: This is simplified - real implementation would need actual VIN patterns
+        """
+        # This is a placeholder - you'd need real VIN generation logic
+        # or a database of sample VINs
+        return []
+    
+    def parse_vin_decode(self, vin_data):
+        """Parse VIN decode response into structured data"""
+        parsed = {}
+        
+        for item in vin_data:
+            variable = item.get('Variable', '')
+            value = item.get('Value', '')
+            
+            if 'Engine' in variable and value and value != 'Not Applicable':
+                parsed['engine'] = value
+            elif 'Trim' in variable and value and value != 'Not Applicable':
+                parsed['trim'] = value
+            elif 'Drive Type' in variable and value:
+                parsed['drivetrain'] = value
+            elif 'Transmission' in variable and value:
+                parsed['transmission'] = value
+                
+        return parsed
+    
+    @transaction.atomic
+    def import_make_data(self, make_data, years):
+        """Import all data for a specific make"""
+        make_name = make_data['Make_Name']
+        make_id = make_data['Make_ID']
+        
+        self.stdout.write(f'Processing make: {make_name}')
+        
+        # Create or get Make object
+        if not self.dry_run:
+            make_obj, created = Make.objects.get_or_create(
+                name=make_name,
+                defaults={'country': 'Unknown'}  # You might want to add country mapping
+            )
+            if created:
+                self.stdout.write(f'  Created make: {make_name}')
+        
+        # Get models for this make
+        try:
+            models_data = self.get_models_for_make(make_name)
+            self.stdout.write(f'  Found {len(models_data)} models')
+            
+            for model_data in models_data:
+                self.import_model_data(make_name, model_data, years)
+                
+        except Exception as e:
+            self.stdout.write(f'  Error getting models for {make_name}: {e}')
+    
+    @transaction.atomic  
+    def import_model_data(self, make_name, model_data, years):
+        """Import model data and create vehicle records"""
+        model_name = model_data['Model_Name']
+        
+        self.stdout.write(f'    Processing model: {model_name}')
+        
+        if not self.dry_run:
+            make_obj = Make.objects.get(name=make_name)
+            model_obj, created = Model.objects.get_or_create(
+                make=make_obj,
+                name=model_name,
+                defaults={'body_style': 'Unknown'}
+            )
+        
+        # For each year, try to get detailed vehicle information
+        for year in years:
+            try:
+                # This is where you'd implement more detailed vehicle spec gathering
+                # For now, create basic vehicle records
+                if not self.dry_run:
+                    vehicle_data = {
+                        'year': year,
+                        'make': make_obj,
+                        'model': model_obj,
+                        'is_active': True
+                    }
+                    
+                    # Try to get or create basic vehicle record
+                    vehicle, created = Vehicle.objects.get_or_create(
+                        year=year,
+                        make=make_obj,
+                        model=model_obj,
+                        defaults=vehicle_data
+                    )
+                    
+                    if created:
+                        self.stdout.write(f'      Created: {year} {make_name} {model_name}')
+                else:
+                    self.stdout.write(f'      Would create: {year} {make_name} {model_name}')
+                    
+                time.sleep(0.05)  # Rate limiting
+                
+            except Exception as e:
+                self.stdout.write(f'      Error processing {year} {make_name} {model_name}: {e}')
+
+    def handle_api_error(self, response, context=""):
+        """Handle API errors gracefully"""
+        if response.status_code == 429:  # Too Many Requests
+            self.stdout.write(f'Rate limited, waiting 60 seconds... {context}')
+            time.sleep(60)
+            return True  # Retry
+        elif response.status_code >= 500:
+            self.stdout.write(f'Server error ({response.status_code}), skipping... {context}')
+            return False  # Skip
+        else:
+            response.raise_for_status()
+            return False

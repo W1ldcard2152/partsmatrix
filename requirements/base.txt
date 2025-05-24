@@ -1,7 +1,8 @@
 # Django and core dependencies
 Django==4.2.7
-psycopg2-binary==2.9.7
+psycopg[binary]==3.1.13
 python-decouple==3.8
+dj-database-url==2.1.0
 
 # Django REST Framework
 djangorestframework==3.14.0
