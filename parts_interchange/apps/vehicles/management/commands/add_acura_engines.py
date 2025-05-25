@@ -43,6 +43,47 @@ class Command(BaseCommand):
                 'years': '1999-2003',
                 'notes': 'Inline-5 from Vigor, unique to early TL'
             },
+            
+            # ILX Engines (missing from original list)
+            {
+                'name': '2.0L I4 SOHC i-VTEC',
+                'displacement': 2.0,
+                'cylinders': 4,
+                'fuel_type': 'GAS',
+                'aspiration': 'NA',
+                'horsepower': 150,
+                'torque': 140,
+                'engine_code': 'R20A3',
+                'models': ['ILX Gen 1'],
+                'years': '2013-2015',
+                'notes': 'Base ILX engine, Civic-derived'
+            },
+            {
+                'name': '1.5L I4 Hybrid',
+                'displacement': 1.5,
+                'cylinders': 4,
+                'fuel_type': 'HYB',
+                'aspiration': 'NA',
+                'horsepower': 111,  # System total
+                'torque': 127,
+                'engine_code': 'LDA2',
+                'models': ['ILX Gen 1 Hybrid'],
+                'years': '2013-2015',
+                'notes': 'IMA hybrid system'
+            },
+            {
+                'name': '2.4L I4 DOHC i-VTEC',
+                'displacement': 2.4,
+                'cylinders': 4,
+                'fuel_type': 'GAS',
+                'aspiration': 'NA',
+                'horsepower': 201,
+                'torque': 180,
+                'engine_code': 'K24W7',
+                'models': ['ILX Gen 2'],
+                'years': '2016-2022',
+                'notes': 'Updated engine for Gen 2 refresh'
+            },
             {
                 'name': '3.2L V6 SOHC VTEC',
                 'displacement': 3.2,
