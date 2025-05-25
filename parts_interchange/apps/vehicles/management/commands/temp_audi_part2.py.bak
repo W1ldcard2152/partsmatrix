@@ -1,0 +1,119 @@
+                if not model_years:
+                    self.stdout.write(f'    ⏭️  No years in range {min(years_range)}-{max(years_range)}')
+                    continue
+                
+                # Process each year
+                for year in model_years:
+                    # Process each trim/engine combination
+                    for trim_name, engine_names in gen_data['trim_engine_mapping'].items():
+                        for engine_name in engine_names:
+                            
+                            # Create vehicle record
+                            if not dry_run:
+                                try:
+                                    # Get trim and engine objects
+                                    trim_obj = Trim.objects.get(name=trim_name)
+                                    engine_obj = Engine.objects.get(name=engine_name)
+                                    
+                                    # Check if vehicle already exists
+                                    existing = Vehicle.objects.filter(
+                                        year=year,
+                                        make=audi_make,
+                                        model=model_obj,
+                                        trim=trim_obj,
+                                        engine=engine_obj
+                                    ).exists()
+                                    
+                                    if existing:
+                                        skipped_count += 1
+                                        status = '- EXISTS'
+                                    else:
+                                        Vehicle.objects.create(
+                                            year=year,
+                                            make=audi_make,
+                                            model=model_obj,
+                                            trim=trim_obj,
+                                            engine=engine_obj,
+                                            is_active=True,
+                                            notes=f'Generation: {generation}' if generation else ''
+                                        )
+                                        created_count += 1
+                                        status = '✓ CREATED'
+                                
+                                except (Trim.DoesNotExist, Engine.DoesNotExist) as e:
+                                    error_count += 1
+                                    status = f'❌ ERROR: {str(e)}'
+                            else:
+                                status = '? DRY RUN'
+                            
+                            # Display vehicle
+                            vehicle_display = f'{year} {model_name}{gen_display} {trim_name} {engine_name}'
+                            self.stdout.write(f'    {status} {vehicle_display}')
+        
+        # Summary
+        self.stdout.write('\\n' + '=' * 60)
+        self.stdout.write('AUDI VEHICLES SUMMARY')
+        self.stdout.write('=' * 60)
+        
+        if not dry_run:
+            self.stdout.write(f'✓ Created: {created_count} vehicle records')
+            self.stdout.write(f'- Existed: {skipped_count} vehicle records')
+            self.stdout.write(f'❌ Errors: {error_count} records')
+            self.stdout.write(f'📊 Total Processed: {created_count + skipped_count + error_count}')
+        else:
+            total_combinations = sum(
+                len([y for y in years_range if gen_data['years'][0] <= y <= gen_data['years'][1]]) *
+                sum(len(engines) for engines in gen_data['trim_engine_mapping'].values())
+                for model_data in audi_vehicle_combinations.values()
+                for gen_data in model_data['generations'].values()
+            )
+            self.stdout.write(f'📊 Would create approximately: {total_combinations} vehicle records')
+        
+        # Model insights
+        self.stdout.write('\\n🔍 AUDI VEHICLE INSIGHTS:')
+        self.stdout.write('Platform Evolution Timeline:')
+        self.stdout.write('• A3: 8L (1996-2003) → 8P (2006-2013) → 8V (2015-2020) → 8Y (2021+)')
+        self.stdout.write('• A4: B5 → B6 → B7 → B8 → B9 → B10 (7-9 year cycles)')
+        self.stdout.write('• A6: C5 → C6 → C7 → C8 (6-7 year cycles)')
+        self.stdout.write('• A8: D2 → D3 → D4 → D5 (flagship tech introductions)')
+        
+        self.stdout.write('\\nEngine Evolution:')
+        self.stdout.write('• 2000-2005: 1.8T era, introduction period')
+        self.stdout.write('• 2006-2010: FSI direct injection, V8/V10 performance')
+        self.stdout.write('• 2010-2017: TFSI turbo + supercharged V6')
+        self.stdout.write('• 2018+: All turbo, mild hybrid, electric transition')
+        
+        self.stdout.write('\\nTrim Hierarchy Patterns:')
+        self.stdout.write('• Entry: Premium → Premium Plus → Prestige')
+        self.stdout.write('• Performance: S line → S models → RS models')
+        self.stdout.write('• Electric: e-tron 50 → e-tron 55 → e-tron S')
+        self.stdout.write('• Engine codes: 30/35/40/45/50/55/60 TFSI')
+        
+        # Next steps
+        self.stdout.write('\\n📋 NEXT STEPS:')
+        self.stdout.write('1. Verify vehicle records: Check admin panel for accuracy')
+        self.stdout.write('2. Start Parts app: python manage.py add_part_categories')
+        self.stdout.write('3. Add actual parts: python manage.py add_parts --category alternator')
+        self.stdout.write('4. Create fitments: Parts → Vehicle combinations')
+        self.stdout.write('5. Import NHTSA data: python manage.py import_nhtsa_vehicles --makes Audi')
+        
+        if not dry_run and created_count > 0:
+            self.stdout.write(
+                self.style.SUCCESS(f'\\n🎉 Successfully created {created_count} Audi vehicle records!')
+            )
+        elif dry_run:
+            self.stdout.write(
+                self.style.WARNING('\\n⚠️  DRY RUN complete - run without --dry-run to create vehicles')
+            )
+        elif created_count == 0:
+            self.stdout.write(
+                self.style.WARNING('\\n⚠️  No new vehicles created - they may already exist')
+            )
+
+    def parse_years(self, year_string):
+        """Parse year range string into list of years"""
+        if '-' in year_string:
+            start, end = map(int, year_string.split('-'))
+            return list(range(start, end + 1))
+        else:
+            return [int(year_string)]
