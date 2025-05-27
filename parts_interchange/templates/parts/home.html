@@ -1,0 +1,102 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Parts Interchange Database - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <h1 class="display-4">
+                <i class="fas fa-cogs"></i> Parts Interchange Database
+            </h1>
+            <p class="lead">
+                Comprehensive automotive parts fitment database for accurate part-to-vehicle compatibility lookup.
+            </p>
+            <hr class="my-4">
+            <p>
+                Search for parts, view vehicle fitments, and manage automotive parts interchange data.
+            </p>
+            <a class="btn btn-light btn-lg" href="{% url 'parts:search' %}" role="button">
+                <i class="fas fa-search"></i> Search Parts
+            </a>
+            <a class="btn btn-outline-light btn-lg ms-2" href="/admin/" role="button">
+                <i class="fas fa-cog"></i> Admin Panel
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-boxes fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Total Parts</h5>
+                <h2 class="text-primary">{{ total_parts|default:0 }}</h2>
+                <p class="card-text">Automotive parts in database</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-industry fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Manufacturers</h5>
+                <h2 class="text-success">{{ total_manufacturers|default:0 }}</h2>
+                <p class="card-text">Different manufacturers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-exchange-alt fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Interchange Groups</h5>
+                <h2 class="text-warning">{{ total_interchange_groups|default:0 }}</h2>
+                <p class="card-text">Part interchange groups</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-search"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'parts:search' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i> Search Parts
+                    </a>
+                    <a href="/api/parts/" class="btn btn-outline-info">
+                        <i class="fas fa-code"></i> Browse API
+                    </a>
+                    <a href="/admin/" class="btn btn-outline-success">
+                        <i class="fas fa-plus"></i> Add New Parts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> About</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    This system stores automotive parts fitment data using industry-standard 
+                    Year/Make/Model/Trim/Engine specifications. Parts are linked to vehicles through 
+                    fitment relationships, enabling accurate compatibility lookups.
+                </p>
+                <p class="mb-0">
+                    <strong>Features:</strong> Part search, vehicle fitments, interchange groups, 
+                    bulk import, and RESTful API.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
