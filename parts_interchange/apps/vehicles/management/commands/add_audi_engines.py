@@ -166,6 +166,34 @@ class Command(BaseCommand):
                 'notes': 'RS-specific tune, anti-lag system'
             },
             
+            # Older Twin-Turbo Engines
+            {
+                'name': '2.7L V6 Twin-Turbo',
+                'displacement': 2.7,
+                'cylinders': 6,
+                'fuel_type': 'GAS',
+                'aspiration': 'TC',
+                'horsepower': 250,
+                'torque': 258,
+                'engine_code': 'APJ/AZB',
+                'models': ['S4 B5'],
+                'years': '2000-2002',
+                'notes': 'Bi-turbo V6, iconic B5 S4 engine'
+            },
+            {
+                'name': '4.2L V8 Twin-Turbo',
+                'displacement': 4.2,
+                'cylinders': 8,
+                'fuel_type': 'GAS',
+                'aspiration': 'TC',
+                'horsepower': 450,
+                'torque': 413,
+                'engine_code': 'BCY',
+                'models': ['RS6 C5'],
+                'years': '2003-2004',
+                'notes': 'Bi-turbo V8, first generation RS6'
+            },
+            
             # Older Naturally Aspirated Engines (2000-2005 era)
             {
                 'name': '1.8L I4 Turbo',

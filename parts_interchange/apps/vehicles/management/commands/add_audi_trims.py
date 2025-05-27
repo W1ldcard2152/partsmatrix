@@ -101,178 +101,8 @@ class Command(BaseCommand):
                 'models': 'A3, A4, A5, A6, A7, Q3, Q5, Q7, Q8',
                 'price_tier': 'Sport-Appearance'
             },
-            {
-                'name': 'S3',
-                'description': 'High-performance compact sedan with 2.0L turbo',
-                'models': 'A3 platform',
-                'price_tier': 'Performance-Sedan'
-            },
-            {
-                'name': 'S4',
-                'description': 'High-performance mid-size sedan with V6 turbo',
-                'models': 'A4 platform',
-                'price_tier': 'Performance-Sedan'
-            },
-            {
-                'name': 'S5',
-                'description': 'High-performance coupe/convertible/sportback with V6 turbo',
-                'models': 'A5 platform',
-                'price_tier': 'Performance-Coupe'
-            },
-            {
-                'name': 'S6',
-                'description': 'High-performance full-size sedan with V8 turbo',
-                'models': 'A6 platform',
-                'price_tier': 'Performance-Luxury'
-            },
-            {
-                'name': 'S7',
-                'description': 'High-performance sportback with V8 turbo',
-                'models': 'A7 platform',
-                'price_tier': 'Performance-Luxury'
-            },
-            {
-                'name': 'S8',
-                'description': 'High-performance flagship sedan with V8 turbo',
-                'models': 'A8 platform',
-                'price_tier': 'Performance-Flagship'
-            },
-            
-            # SQ Performance SUV Trims
-            {
-                'name': 'SQ5',
-                'description': 'High-performance mid-size SUV with V6 turbo',
-                'models': 'Q5 platform',
-                'price_tier': 'Performance-SUV'
-            },
-            {
-                'name': 'SQ7',
-                'description': 'High-performance full-size SUV with V8 turbo',
-                'models': 'Q7 platform',
-                'price_tier': 'Performance-Luxury-SUV'
-            },
-            {
-                'name': 'SQ8',
-                'description': 'High-performance coupe SUV with V8 turbo',
-                'models': 'Q8 platform',
-                'price_tier': 'Performance-Flagship-SUV'
-            },
-            
-            # RS Ultra-Performance Trims
-            {
-                'name': 'RS3',
-                'description': 'Ultra-high-performance compact with 2.5L turbo I5',
-                'models': 'A3 platform',
-                'price_tier': 'Ultra-Performance'
-            },
-            {
-                'name': 'RS4',
-                'description': 'Ultra-high-performance wagon with twin-turbo V6',
-                'models': 'A4 platform (Avant only)',
-                'price_tier': 'Ultra-Performance'
-            },
-            {
-                'name': 'RS5',
-                'description': 'Ultra-high-performance coupe/convertible/sportback with twin-turbo V6',
-                'models': 'A5 platform',
-                'price_tier': 'Ultra-Performance'
-            },
-            {
-                'name': 'RS6',
-                'description': 'Ultra-high-performance wagon with twin-turbo V8',
-                'models': 'A6 platform (Avant only)',
-                'price_tier': 'Ultra-Performance'
-            },
-            {
-                'name': 'RS7',
-                'description': 'Ultra-high-performance sportback with twin-turbo V8',
-                'models': 'A7 platform',
-                'price_tier': 'Ultra-Performance'
-            },
-            {
-                'name': 'RSQ8',
-                'description': 'Ultra-high-performance coupe SUV with twin-turbo V8',
-                'models': 'Q8 platform',
-                'price_tier': 'Ultra-Performance-SUV'
-            },
-            
-            # TT Specific Trims
-            {
-                'name': 'TT',
-                'description': 'Base TT sports car trim',
-                'models': 'TT Coupe/Roadster',
-                'price_tier': 'Sports-Car'
-            },
-            {
-                'name': 'TTS',
-                'description': 'Performance TT with higher output engine',
-                'models': 'TT Coupe/Roadster',
-                'price_tier': 'Performance-Sports-Car'
-            },
-            {
-                'name': 'TT RS',
-                'description': 'Ultra-high-performance TT with 2.5L turbo I5',
-                'models': 'TT Coupe/Roadster',
-                'price_tier': 'Ultra-Performance-Sports-Car'
-            },
-            
-            # R8 Specific Trims
-            {
-                'name': 'R8 V8',
-                'description': 'R8 supercar with 4.2L V8 engine',
-                'models': 'R8 Gen 1',
-                'price_tier': 'Supercar'
-            },
-            {
-                'name': 'R8 V10',
-                'description': 'R8 supercar with 5.2L V10 engine',
-                'models': 'R8 Gen 1/2',
-                'price_tier': 'Supercar'
-            },
-            {
-                'name': 'R8 V10 Plus',
-                'description': 'High-performance R8 with track-focused setup',
-                'models': 'R8 Gen 1/2',
-                'price_tier': 'Track-Supercar'
-            },
-            {
-                'name': 'R8 Performance',
-                'description': 'Ultimate R8 trim with maximum power and aero',
-                'models': 'R8 Gen 2',
-                'price_tier': 'Ultimate-Supercar'
-            },
-            
-            # e-tron Electric Trims
-            {
-                'name': 'e-tron 50',
-                'description': 'Base electric SUV with single motor',
-                'models': 'e-tron SUV, Q4 e-tron',
-                'price_tier': 'Electric-Base'
-            },
-            {
-                'name': 'e-tron 55',
-                'description': 'Premium electric SUV with dual motors',
-                'models': 'e-tron SUV',
-                'price_tier': 'Electric-Premium'
-            },
-            {
-                'name': 'e-tron S',
-                'description': 'Performance electric SUV with triple motors',
-                'models': 'e-tron SUV',
-                'price_tier': 'Electric-Performance'
-            },
-            {
-                'name': 'e-tron GT',
-                'description': 'Electric sports sedan base trim',
-                'models': 'e-tron GT',
-                'price_tier': 'Electric-Sports'
-            },
-            {
-                'name': 'RS e-tron GT',
-                'description': 'Ultra-high-performance electric sports sedan',
-                'models': 'e-tron GT',
-                'price_tier': 'Electric-Ultra-Performance'
-            },
+            # The following S, RS, TT, R8, and some e-tron models were previously listed as trims but are now models.
+            # They have been removed from this file and added to add_audi_models.py and create_audi_vehicles.py.
             
             # Hybrid Trims (TFSI e)
             {
@@ -504,28 +334,27 @@ class Command(BaseCommand):
         self.stdout.write('\\n🔍 TRIM HIERARCHY INSIGHTS:')
         self.stdout.write('Audi Luxury Tiers: Premium → Premium Plus → Prestige')
         self.stdout.write('Engine Designations: 30/35/40/45/50/55/60 TFSI (power levels)')
-        self.stdout.write('Performance Hierarchy: Base → S line → S → RS')
-        self.stdout.write('Electric: e-tron 50 → e-tron 55 → e-tron S → RS e-tron GT')
+        self.stdout.write('Performance Hierarchy: Base → S line')
         
         self.stdout.write('\\nKey Audi Trim Patterns:')
         self.stdout.write('• TFSI Numbers: Power/engine displacement coding system')
-        self.stdout.write('• S Models: Sport performance (S3-S8, SQ5-SQ8)')
-        self.stdout.write('• RS Models: Racing sport, ultimate performance')
+        self.stdout.write('• S Models: Sport performance (now separate models)')
+        self.stdout.write('• RS Models: Racing sport, ultimate performance (now separate models)')
         self.stdout.write('• quattro: All-wheel drive technology standard on most')
         
         # Model-specific notes
         self.stdout.write('\\nModel-Specific Trim Notes:')
-        self.stdout.write('• A3: Premium/Premium Plus/Prestige → S3 → RS3')
-        self.stdout.write('• A4: Premium/Premium Plus/Prestige → S4 → RS4 (Avant only)')
-        self.stdout.write('• A6/A7: Premium Plus/Prestige → S6/S7 → RS6/RS7')
-        self.stdout.write('• Q-Series: Premium/Premium Plus/Prestige → SQ → RSQ8')
-        self.stdout.write('• TT: Base → TTS → TT RS (discontinued 2023)')
-        self.stdout.write('• R8: V8 → V10 → V10 Plus/Performance (discontinued 2023)')
+        self.stdout.write('• A3: Premium/Premium Plus/Prestige')
+        self.stdout.write('• A4: Premium/Premium Plus/Prestige')
+        self.stdout.write('• A6/A7: Premium Plus/Prestige')
+        self.stdout.write('• Q-Series: Premium/Premium Plus/Prestige')
+        self.stdout.write('• TT: Premium/Premium Plus/Prestige (now a model)')
+        self.stdout.write('• R8: Premium/Premium Plus/Prestige (now a model)')
         
         # Electric transition notes
         self.stdout.write('\\nElectric Transition:')
         self.stdout.write('• Traditional TFSI → TFSI e (plug-in hybrid) → e-tron (full electric)')
-        self.stdout.write('• e-tron naming: 50 (base) → 55 (premium) → S (performance)')
+        self.stdout.write('• e-tron naming: 50 (base) → 55 (premium)')
         self.stdout.write('• Future: All models transitioning to electric by 2033')
         
         # Next steps

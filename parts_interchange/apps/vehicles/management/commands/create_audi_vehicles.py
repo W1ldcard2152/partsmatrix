@@ -69,25 +69,22 @@ class Command(BaseCommand):
                     },
                     '8V': {
                         'years': (2015, 2020),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S3'],
-                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo High Output'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo'],
-                            'Prestige': ['2.0L I4 TFSI Turbo'],
-                            'S3': ['2.0L I4 TFSI Turbo High Output']
+                            'Prestige': ['2.0L I4 TFSI Turbo']
                         }
                     },
                     '8Y': {
                         'years': (2021, 2025),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S3', 'RS3'],
-                        'engines': ['1.4L I4 TFSI Turbo', '2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo High Output', '2.5L I5 TFSI Turbo'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['1.4L I4 TFSI Turbo', '2.0L I4 TFSI Turbo'],
                         'trim_engine_mapping': {
                             'Premium': ['1.4L I4 TFSI Turbo', '2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo'],
-                            'Prestige': ['2.0L I4 TFSI Turbo'],
-                            'S3': ['2.0L I4 TFSI Turbo High Output'],
-                            'RS3': ['2.5L I5 TFSI Turbo']
+                            'Prestige': ['2.0L I4 TFSI Turbo']
                         }
                     }
                 }
@@ -114,67 +111,61 @@ class Command(BaseCommand):
                     },
                     'B7': {
                         'years': (2006, 2008),
-                        'trims': ['2.0T', '3.2 quattro', 'S4'],
-                        'engines': ['2.0L I4 FSI', '3.2L V6 FSI', '4.2L V8 FSI'],
+                        'trims': ['2.0T', '3.2 quattro'],
+                        'engines': ['2.0L I4 FSI', '3.2L V6 FSI'],
                         'trim_engine_mapping': {
                             '2.0T': ['2.0L I4 FSI'],
-                            '3.2 quattro': ['3.2L V6 FSI'],
-                            'S4': ['4.2L V8 FSI']
+                            '3.2 quattro': ['3.2L V6 FSI']
                         }
                     },
                     'B8': {
                         'years': (2009, 2012),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S4'],
-                        'engines': ['1.8L I4 TFSI Turbo', '2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['1.8L I4 TFSI Turbo', '2.0L I4 TFSI Turbo'],
                         'trim_engine_mapping': {
                             'Premium': ['1.8L I4 TFSI Turbo', '2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo'],
-                            'Prestige': ['2.0L I4 TFSI Turbo'],
-                            'S4': ['3.0L V6 TFSI Supercharged']
+                            'Prestige': ['2.0L I4 TFSI Turbo']
                         }
                     },
                     'B8.5': {
                         'years': (2013, 2016),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S4'],
-                        'engines': ['1.8L I4 TFSI Turbo', '2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['1.8L I4 TFSI Turbo', '2.0L I4 TFSI Turbo'],
                         'trim_engine_mapping': {
                             'Premium': ['1.8L I4 TFSI Turbo', '2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo'],
-                            'Prestige': ['2.0L I4 TFSI Turbo'],
-                            'S4': ['3.0L V6 TFSI Supercharged']
+                            'Prestige': ['2.0L I4 TFSI Turbo']
                         }
                     },
                     'B9': {
                         'years': (2017, 2020),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S4'],
-                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI', '3.0L V6 TFSI Turbo'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            'S4': ['3.0L V6 TFSI Turbo']
+                            'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI']
                         }
                     },
                     'B9.5': {
                         'years': (2021, 2023),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S4'],
-                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI', '3.0L V6 TFSI Turbo'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            'S4': ['3.0L V6 TFSI Turbo']
+                            'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI']
                         }
                     },
                     'B10': {
                         'years': (2024, 2025),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S4'],
-                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI', '3.0L V6 TFSI Turbo'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            'S4': ['3.0L V6 TFSI Turbo']
+                            'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI']
                         }
                     }
                 }
@@ -183,49 +174,42 @@ class Command(BaseCommand):
                 'generations': {
                     'B8': {
                         'years': (2008, 2012),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S5'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
                         'engines': ['2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged'],
-                            'Prestige': ['3.0L V6 TFSI Supercharged'],
-                            'S5': ['3.0L V6 TFSI Supercharged']
+                            'Prestige': ['3.0L V6 TFSI Supercharged']
                         }
                     },
                     'B8.5': {
                         'years': (2013, 2016),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S5', 'RS5'],
-                        'engines': ['2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged', '4.2L V8 FSI'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged'],
-                            'Prestige': ['3.0L V6 TFSI Supercharged'],
-                            'S5': ['3.0L V6 TFSI Supercharged'],
-                            'RS5': ['4.2L V8 FSI']
+                            'Prestige': ['3.0L V6 TFSI Supercharged']
                         }
                     },
                     'B9': {
                         'years': (2017, 2020),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S5', 'RS5'],
-                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI', '3.0L V6 TFSI Turbo', '2.9L V6 TFSI Twin-Turbo'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            'S5': ['3.0L V6 TFSI Turbo'],
-                            'RS5': ['2.9L V6 TFSI Twin-Turbo']
+                            'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI']
                         }
                     },
                     'B9.5': {
                         'years': (2021, 2025),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'S5', 'RS5'],
-                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI', '3.0L V6 TFSI Turbo', '2.9L V6 TFSI Twin-Turbo'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            'S5': ['3.0L V6 TFSI Turbo'],
-                            'RS5': ['2.9L V6 TFSI Twin-Turbo']
+                            'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI']
                         }
                     }
                 }
@@ -234,48 +218,44 @@ class Command(BaseCommand):
                 'generations': {
                     '8R': {
                         'years': (2009, 2012),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'SQ5'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
                         'engines': ['2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged'],
-                            'Prestige': ['3.0L V6 TFSI Supercharged'],
-                            'SQ5': ['3.0L V6 TFSI Supercharged']
+                            'Prestige': ['3.0L V6 TFSI Supercharged']
                         }
                     },
                     '8R.5': {
                         'years': (2013, 2017),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'SQ5'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
                         'engines': ['2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo', '3.0L V6 TFSI Supercharged'],
-                            'Prestige': ['3.0L V6 TFSI Supercharged'],
-                            'SQ5': ['3.0L V6 TFSI Supercharged']
+                            'Prestige': ['3.0L V6 TFSI Supercharged']
                         }
                     },
                     '8Y': {
                         'years': (2018, 2021),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', '50 TFSI e', 'SQ5'],
-                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI', '2.0L I4 TFSI Hybrid', '3.0L V6 TFSI Turbo'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige', '50 TFSI e'],
+                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI', '2.0L I4 TFSI Hybrid'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo 45 TFSI'],
                             'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            '50 TFSI e': ['2.0L I4 TFSI Hybrid'],
-                            'SQ5': ['3.0L V6 TFSI Turbo']
+                            '50 TFSI e': ['2.0L I4 TFSI Hybrid']
                         }
                     },
                     '8Y.5': {
                         'years': (2022, 2025),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', '50 TFSI e', 'SQ5'],
-                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI', '2.0L I4 TFSI Hybrid', '3.0L V6 TFSI Turbo'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige', '50 TFSI e'],
+                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo 45 TFSI', '2.0L I4 TFSI Hybrid'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo 45 TFSI'],
                             'Prestige': ['2.0L I4 TFSI Turbo 45 TFSI'],
-                            '50 TFSI e': ['2.0L I4 TFSI Hybrid'],
-                            'SQ5': ['3.0L V6 TFSI Turbo']
+                            '50 TFSI e': ['2.0L I4 TFSI Hybrid']
                         }
                     }
                 }
@@ -293,44 +273,936 @@ class Command(BaseCommand):
                     },
                     '8J': {
                         'years': (2008, 2010),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'TTS'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
                         'engines': ['2.0L I4 TFSI Turbo', '3.2L V6 FSI'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo'],
-                            'Prestige': ['3.2L V6 FSI'],
-                            'TTS': ['2.0L I4 TFSI Turbo High Output']
+                            'Prestige': ['3.2L V6 FSI']
                         }
                     },
                     '8J.5': {
                         'years': (2011, 2015),
-                        'trims': ['Premium', 'Premium Plus', 'Prestige', 'TTS'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
                         'engines': ['2.0L I4 TFSI Turbo', '3.2L V6 FSI'],
                         'trim_engine_mapping': {
                             'Premium': ['2.0L I4 TFSI Turbo'],
                             'Premium Plus': ['2.0L I4 TFSI Turbo'],
-                            'Prestige': ['3.2L V6 FSI'],
-                            'TTS': ['2.0L I4 TFSI Turbo High Output']
+                            'Prestige': ['3.2L V6 FSI']
                         }
                     },
                     '8S': {
                         'years': (2016, 2018),
-                        'trims': ['TT', 'TTS', 'TT RS'],
-                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo High Output', '2.5L I5 TFSI Turbo'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo'],
                         'trim_engine_mapping': {
-                            'TT': ['2.0L I4 TFSI Turbo'],
-                            'TTS': ['2.0L I4 TFSI Turbo High Output'],
-                            'TT RS': ['2.5L I5 TFSI Turbo']
+                            'Premium': ['2.0L I4 TFSI Turbo'],
+                            'Premium Plus': ['2.0L I4 TFSI Turbo'],
+                            'Prestige': ['2.0L I4 TFSI Turbo']
                         }
                     },
                     '8S.5': {
                         'years': (2019, 2023),
-                        'trims': ['TT', 'TTS', 'TT RS'],
-                        'engines': ['2.0L I4 TFSI Turbo', '2.0L I4 TFSI Turbo High Output', '2.5L I5 TFSI Turbo'],
+                        'trims': ['Premium', 'Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo'],
                         'trim_engine_mapping': {
-                            'TT': ['2.0L I4 TFSI Turbo'],
-                            'TTS': ['2.0L I4 TFSI Turbo High Output'],
-                            'TT RS': ['2.5L I5 TFSI Turbo']
+                            'Premium': ['2.0L I4 TFSI Turbo'],
+                            'Premium Plus': ['2.0L I4 TFSI Turbo'],
+                            'Prestige': ['2.0L I4 TFSI Turbo']
+                        }
+                    }
+                }
+            },
+            # S Models
+            'S3': {
+                'body_style': 'Sedan',
+                'years': [
+                    {'range': (2015, 2020), 'generation': '8V', 'note': 'First S3 in US'},
+                    {'range': (2021, 2025), 'generation': '8Y', 'note': 'Current generation S3'}
+                ],
+                'generations': {
+                    '8V': {
+                        'years': (2015, 2020),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo High Output'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.0L I4 TFSI Turbo High Output'],
+                            'Prestige': ['2.0L I4 TFSI Turbo High Output']
+                        }
+                    },
+                    '8Y': {
+                        'years': (2021, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo High Output'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.0L I4 TFSI Turbo High Output'],
+                            'Prestige': ['2.0L I4 TFSI Turbo High Output']
+                        }
+                    }
+                }
+            },
+            'S4': {
+                'body_style': 'Sedan/Wagon',
+                'years': [
+                    {'range': (2000, 2003), 'generation': 'B5', 'note': 'Twin-turbo V6, B5 S4'},
+                    {'range': (2004, 2005), 'generation': 'B6', 'note': 'V8 engine introduction, B6 S4'},
+                    {'range': (2006, 2008), 'generation': 'B7', 'note': 'B7 S4, updated styling and tech'},
+                    {'range': (2010, 2012), 'generation': 'B8', 'note': 'Supercharged V6, B8 S4'},
+                    {'range': (2013, 2016), 'generation': 'B8.5', 'note': 'B8.5 S4, updated styling and tech'},
+                    {'range': (2018, 2020), 'generation': 'B9', 'note': 'Turbo V6, mild hybrid, B9 S4'},
+                    {'range': (2021, 2025), 'generation': 'B9.5', 'note': 'B9.5 S4, updated styling and technology'}
+                ],
+                'generations': {
+                    'B5': {
+                        'years': (2000, 2003),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.7L V6 Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.7L V6 Twin-Turbo'],
+                            'Prestige': ['2.7L V6 Twin-Turbo']
+                        }
+                    },
+                    'B6': {
+                        'years': (2004, 2005),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.2L V8 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.2L V8 FSI'],
+                            'Prestige': ['4.2L V8 FSI']
+                        }
+                    },
+                    'B7': {
+                        'years': (2006, 2008),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.2L V8 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.2L V8 FSI'],
+                            'Prestige': ['4.2L V8 FSI']
+                        }
+                    },
+                    'B8': {
+                        'years': (2010, 2012),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Supercharged'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Supercharged'],
+                            'Prestige': ['3.0L V6 TFSI Supercharged']
+                        }
+                    },
+                    'B8.5': {
+                        'years': (2013, 2016),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Supercharged'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Supercharged'],
+                            'Prestige': ['3.0L V6 TFSI Supercharged']
+                        }
+                    },
+                    'B9': {
+                        'years': (2018, 2020),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Turbo'],
+                            'Prestige': ['3.0L V6 TFSI Turbo']
+                        }
+                    },
+                    'B9.5': {
+                        'years': (2021, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Turbo'],
+                            'Prestige': ['3.0L V6 TFSI Turbo']
+                        }
+                    }
+                }
+            },
+            'S5': {
+                'body_style': 'Coupe/Convertible/Sportback',
+                'years': [
+                    {'range': (2008, 2012), 'generation': 'B8', 'note': 'First S5, V8 engine'},
+                    {'range': (2013, 2016), 'generation': 'B8.5', 'note': 'B8.5 S5, supercharged V6'},
+                    {'range': (2018, 2020), 'generation': 'B9', 'note': 'Turbo V6, mild hybrid, B9 S5'},
+                    {'range': (2021, 2025), 'generation': 'B9.5', 'note': 'B9.5 S5, updated styling and technology'}
+                ],
+                'generations': {
+                    'B8': {
+                        'years': (2008, 2012),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.2L V8 FSI', '3.0L V6 TFSI Supercharged'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.2L V8 FSI', '3.0L V6 TFSI Supercharged'],
+                            'Prestige': ['4.2L V8 FSI', '3.0L V6 TFSI Supercharged']
+                        }
+                    },
+                    'B8.5': {
+                        'years': (2013, 2016),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Supercharged'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Supercharged'],
+                            'Prestige': ['3.0L V6 TFSI Supercharged']
+                        }
+                    },
+                    'B9': {
+                        'years': (2018, 2020),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Turbo'],
+                            'Prestige': ['3.0L V6 TFSI Turbo']
+                        }
+                    },
+                    'B9.5': {
+                        'years': (2021, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Turbo'],
+                            'Prestige': ['3.0L V6 TFSI Turbo']
+                        }
+                    }
+                }
+            },
+            'S6': {
+                'body_style': 'Sedan/Wagon',
+                'years': [
+                    {'range': (2002, 2004), 'generation': 'C5', 'note': 'V8 twin-turbo'},
+                    {'range': (2007, 2011), 'generation': 'C6', 'note': 'V10 engine'},
+                    {'range': (2013, 2014), 'generation': 'C7', 'note': 'Twin-turbo V8, first C7 S6'},
+                    {'range': (2015, 2018), 'generation': 'C7.5', 'note': 'C7.5 S6, updated styling and tech'},
+                    {'range': (2020, 2022), 'generation': 'C8', 'note': 'Mild hybrid V8, new S6'},
+                    {'range': (2023, 2025), 'generation': 'C8.5', 'note': 'C8.5 S6, updated technology and styling'}
+                ],
+                'generations': {
+                    'C5': {
+                        'years': (2002, 2004),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.2L V8 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.2L V8 FSI'],
+                            'Prestige': ['4.2L V8 FSI']
+                        }
+                    },
+                    'C6': {
+                        'years': (2007, 2011),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['5.2L V10 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['5.2L V10 FSI'],
+                            'Prestige': ['5.2L V10 FSI']
+                        }
+                    },
+                    'C7': {
+                        'years': (2013, 2014),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'C7.5': {
+                        'years': (2015, 2018),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'C8': {
+                        'years': (2020, 2022),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'C8.5': {
+                        'years': (2023, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    }
+                }
+            },
+            'S7': {
+                'body_style': 'Sportback',
+                'years': [
+                    {'range': (2013, 2014), 'generation': 'C7', 'note': 'Twin-turbo V8, first S7'},
+                    {'range': (2015, 2018), 'generation': 'C7.5', 'note': 'C7.5 S7, updated styling and tech'},
+                    {'range': (2020, 2022), 'generation': 'C8', 'note': 'Mild hybrid V8, new S7'},
+                    {'range': (2023, 2025), 'generation': 'C8.5', 'note': 'C8.5 S7, updated technology and styling'}
+                ],
+                'generations': {
+                    'C7': {
+                        'years': (2013, 2014),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'C7.5': {
+                        'years': (2015, 2018),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'C8': {
+                        'years': (2020, 2022),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'C8.5': {
+                        'years': (2023, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    }
+                }
+            },
+            'S8': {
+                'body_style': 'Sedan',
+                'years': [
+                    {'range': (2001, 2003), 'generation': 'D2', 'note': 'V8 twin-turbo'},
+                    {'range': (2007, 2009), 'generation': 'D3', 'note': 'V10 engine'},
+                    {'range': (2013, 2013), 'generation': 'D4', 'note': 'Twin-turbo V8, new S8'},
+                    {'range': (2014, 2017), 'generation': 'D4.5', 'note': 'D4.5 S8, updated styling and tech'},
+                    {'range': (2020, 2022), 'generation': 'D5', 'note': 'Mild hybrid V8, new S8'},
+                    {'range': (2023, 2025), 'generation': 'D5.5', 'note': 'D5.5 S8, updated technology and performance'}
+                ],
+                'generations': {
+                    'D2': {
+                        'years': (2001, 2003),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.2L V8 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.2L V8 FSI'],
+                            'Prestige': ['4.2L V8 FSI']
+                        }
+                    },
+                    'D3': {
+                        'years': (2007, 2009),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['5.2L V10 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['5.2L V10 FSI'],
+                            'Prestige': ['5.2L V10 FSI']
+                        }
+                    },
+                    'D4': {
+                        'years': (2013, 2013),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'D4.5': {
+                        'years': (2014, 2017),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'D5': {
+                        'years': (2020, 2022),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'D5.5': {
+                        'years': (2023, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    }
+                }
+            },
+            # SQ Models
+            'SQ5': {
+                'body_style': 'SUV',
+                'years': [
+                    {'range': (2014, 2015), 'generation': '8R', 'note': 'Supercharged V6, first SQ5'},
+                    {'range': (2016, 2017), 'generation': '8R.5', 'note': '8R.5 SQ5, updated styling before redesign'},
+                    {'range': (2018, 2021), 'generation': '8Y', 'note': 'Turbo V6, mild hybrid, new SQ5'},
+                    {'range': (2022, 2025), 'generation': '8Y.5', 'note': '8Y.5 SQ5, updated technology and styling'}
+                ],
+                'generations': {
+                    '8R': {
+                        'years': (2014, 2015),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Supercharged'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Supercharged'],
+                            'Prestige': ['3.0L V6 TFSI Supercharged']
+                        }
+                    },
+                    '8R.5': {
+                        'years': (2016, 2017),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Supercharged'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Supercharged'],
+                            'Prestige': ['3.0L V6 TFSI Supercharged']
+                        }
+                    },
+                    '8Y': {
+                        'years': (2018, 2021),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Turbo'],
+                            'Prestige': ['3.0L V6 TFSI Turbo']
+                        }
+                    },
+                    '8Y.5': {
+                        'years': (2022, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['3.0L V6 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['3.0L V6 TFSI Turbo'],
+                            'Prestige': ['3.0L V6 TFSI Turbo']
+                        }
+                    }
+                }
+            },
+            'SQ7': {
+                'body_style': 'SUV',
+                'years': [
+                    {'range': (2017, 2019), 'generation': '4M', 'note': 'Twin-turbo V8, mild hybrid, first SQ7'},
+                    {'range': (2020, 2025), 'generation': '4M.5', 'note': '4M.5 SQ7, updated styling and technology'}
+                ],
+                'generations': {
+                    '4M': {
+                        'years': (2017, 2019),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    '4M.5': {
+                        'years': (2020, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    }
+                }
+            },
+            'SQ8': {
+                'body_style': 'SUV',
+                'years': [
+                    {'range': (2020, 2022), 'generation': '4M', 'note': 'Twin-turbo V8, mild hybrid, first SQ8'},
+                    {'range': (2023, 2025), 'generation': '4M.5', 'note': '4M.5 SQ8, updated styling and technology'}
+                ],
+                'generations': {
+                    '4M': {
+                        'years': (2020, 2022),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    '4M.5': {
+                        'years': (2023, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    }
+                }
+            },
+            # RS Models
+            'RS3': {
+                'body_style': 'Sedan/Sportback',
+                'years': [
+                    {'range': (2018, 2020), 'generation': '8V', 'note': 'First RS3 in US'},
+                    {'range': (2022, 2025), 'generation': '8Y', 'note': 'Current generation RS3'}
+                ],
+                'generations': {
+                    '8V': {
+                        'years': (2018, 2020),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.5L I5 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.5L I5 TFSI Turbo'],
+                            'Prestige': ['2.5L I5 TFSI Turbo']
+                        }
+                    },
+                    '8Y': {
+                        'years': (2022, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.5L I5 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.5L I5 TFSI Turbo'],
+                            'Prestige': ['2.5L I5 TFSI Turbo']
+                        }
+                    }
+                }
+            },
+            'RS5': {
+                'body_style': 'Coupe/Sportback',
+                'years': [
+                    {'range': (2013, 2014), 'generation': 'B8', 'note': 'Naturally aspirated V8'},
+                    {'range': (2015, 2015), 'generation': 'B8.5', 'note': 'B8.5 RS5, final year before hiatus'},
+                    {'range': (2018, 2020), 'generation': 'B9', 'note': 'Twin-turbo V6, new RS5'},
+                    {'range': (2021, 2025), 'generation': 'B9.5', 'note': 'B9.5 RS5, updated styling and performance'}
+                ],
+                'generations': {
+                    'B8': {
+                        'years': (2013, 2014),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.2L V8 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.2L V8 FSI'],
+                            'Prestige': ['4.2L V8 FSI']
+                        }
+                    },
+                    'B8.5': {
+                        'years': (2015, 2015),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.2L V8 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.2L V8 FSI'],
+                            'Prestige': ['4.2L V8 FSI']
+                        }
+                    },
+                    'B9': {
+                        'years': (2018, 2020),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.9L V6 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.9L V6 TFSI Twin-Turbo'],
+                            'Prestige': ['2.9L V6 TFSI Twin-Turbo']
+                        }
+                    },
+                    'B9.5': {
+                        'years': (2021, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.9L V6 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.9L V6 TFSI Twin-Turbo'],
+                            'Prestige': ['2.9L V6 TFSI Twin-Turbo']
+                        }
+                    }
+                }
+            },
+            'RS6': {
+                'body_style': 'Wagon',
+                'years': [
+                    {'range': (2003, 2004), 'generation': 'C5', 'note': 'Twin-turbo V8, limited availability'},
+                    {'range': (2020, 2022), 'generation': 'C8', 'note': 'Return to US, mild hybrid V8'},
+                    {'range': (2023, 2025), 'generation': 'C8.5', 'note': 'C8.5 RS6, updated performance and technology'}
+                ],
+                'generations': {
+                    'C5': {
+                        'years': (2003, 2004),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.2L V8 Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.2L V8 Twin-Turbo'],
+                            'Prestige': ['4.2L V8 Twin-Turbo']
+                        }
+                    },
+                    'C8': {
+                        'years': (2020, 2022),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'C8.5': {
+                        'years': (2023, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    }
+                }
+            },
+            'RS7': {
+                'body_style': 'Sportback',
+                'years': [
+                    {'range': (2014, 2014), 'generation': 'C7', 'note': 'Twin-turbo V8, first RS7'},
+                    {'range': (2015, 2018), 'generation': 'C7.5', 'note': 'C7.5 RS7, updated styling and performance'},
+                    {'range': (2020, 2022), 'generation': 'C8', 'note': 'Mild hybrid V8, new RS7'},
+                    {'range': (2023, 2025), 'generation': 'C8.5', 'note': 'C8.5 RS7, updated performance and technology'}
+                ],
+                'generations': {
+                    'C7': {
+                        'years': (2014, 2014),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'C7.5': {
+                        'years': (2015, 2018),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'C8': {
+                        'years': (2020, 2022),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    'C8.5': {
+                        'years': (2023, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    }
+                }
+            },
+            'RSQ8': {
+                'body_style': 'SUV',
+                'years': [
+                    {'range': (2020, 2022), 'generation': '4M', 'note': 'First RS SUV, twin-turbo V8'},
+                    {'range': (2023, 2025), 'generation': '4M.5', 'note': '4M.5 RSQ8, updated performance and styling'}
+                ],
+                'generations': {
+                    '4M': {
+                        'years': (2020, 2022),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    },
+                    '4M.5': {
+                        'years': (2023, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.0L V8 TFSI Twin-Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.0L V8 TFSI Twin-Turbo'],
+                            'Prestige': ['4.0L V8 TFSI Twin-Turbo']
+                        }
+                    }
+                }
+            },
+            # TT Models (as models)
+            'TT': {
+                'body_style': 'Coupe/Convertible',
+                'years': [
+                    {'range': (2000, 2006), 'generation': '8N', 'note': 'First generation in US'},
+                    {'range': (2008, 2010), 'generation': '8J', 'note': 'Second generation 8J platform'},
+                    {'range': (2011, 2015), 'generation': '8J.5', 'note': '8J.5 facelift, updated styling and interior'},
+                    {'range': (2016, 2018), 'generation': '8S', 'note': 'Third generation 8S platform, virtual cockpit'},
+                    {'range': (2019, 2023), 'generation': '8S.5', 'note': '8S.5 facelift, updated styling before discontinuation'}
+                ],
+                'is_active': False,
+                'discontinued': 2023,
+                'generations': {
+                    '8N': {
+                        'years': (2000, 2006),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['1.8L I4 Turbo', '3.2L V6 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['1.8L I4 Turbo', '3.2L V6 FSI'],
+                            'Prestige': ['1.8L I4 Turbo', '3.2L V6 FSI']
+                        }
+                    },
+                    '8J': {
+                        'years': (2008, 2010),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo', '3.2L V6 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.0L I4 TFSI Turbo', '3.2L V6 FSI'],
+                            'Prestige': ['2.0L I4 TFSI Turbo', '3.2L V6 FSI']
+                        }
+                    },
+                    '8J.5': {
+                        'years': (2011, 2015),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo', '3.2L V6 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.0L I4 TFSI Turbo', '3.2L V6 FSI'],
+                            'Prestige': ['2.0L I4 TFSI Turbo', '3.2L V6 FSI']
+                        }
+                    },
+                    '8S': {
+                        'years': (2016, 2018),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.0L I4 TFSI Turbo'],
+                            'Prestige': ['2.0L I4 TFSI Turbo']
+                        }
+                    },
+                    '8S.5': {
+                        'years': (2019, 2023),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.0L I4 TFSI Turbo'],
+                            'Prestige': ['2.0L I4 TFSI Turbo']
+                        }
+                    }
+                }
+            },
+            'TTS': {
+                'body_style': 'Coupe/Convertible',
+                'years': [
+                    {'range': (2008, 2010), 'generation': '8J', 'note': 'First TTS'},
+                    {'range': (2011, 2015), 'generation': '8J.5', 'note': '8J.5 TTS facelift'},
+                    {'range': (2016, 2018), 'generation': '8S', 'note': 'Third generation TTS'},
+                    {'range': (2019, 2023), 'generation': '8S.5', 'note': '8S.5 TTS final updates'}
+                ],
+                'is_active': False,
+                'discontinued': 2023,
+                'generations': {
+                    '8J': {
+                        'years': (2008, 2010),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo High Output'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.0L I4 TFSI Turbo High Output'],
+                            'Prestige': ['2.0L I4 TFSI Turbo High Output']
+                        }
+                    },
+                    '8J.5': {
+                        'years': (2011, 2015),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo High Output'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.0L I4 TFSI Turbo High Output'],
+                            'Prestige': ['2.0L I4 TFSI Turbo High Output']
+                        }
+                    },
+                    '8S': {
+                        'years': (2016, 2018),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo High Output'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.0L I4 TFSI Turbo High Output'],
+                            'Prestige': ['2.0L I4 TFSI Turbo High Output']
+                        }
+                    },
+                    '8S.5': {
+                        'years': (2019, 2023),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.0L I4 TFSI Turbo High Output'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.0L I4 TFSI Turbo High Output'],
+                            'Prestige': ['2.0L I4 TFSI Turbo High Output']
+                        }
+                    }
+                }
+            },
+            'TT RS': {
+                'body_style': 'Coupe/Convertible',
+                'years': [
+                    {'range': (2012, 2013), 'generation': '8J', 'note': 'First TT RS in US'},
+                    {'range': (2018, 2020), 'generation': '8S', 'note': 'Second generation TT RS'},
+                    {'range': (2021, 2023), 'generation': '8S.5', 'note': '8S.5 TT RS final updates'}
+                ],
+                'is_active': False,
+                'discontinued': 2023,
+                'generations': {
+                    '8J': {
+                        'years': (2012, 2013),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.5L I5 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.5L I5 TFSI Turbo'],
+                            'Prestige': ['2.5L I5 TFSI Turbo']
+                        }
+                    },
+                    '8S': {
+                        'years': (2018, 2020),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.5L I5 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.5L I5 TFSI Turbo'],
+                            'Prestige': ['2.5L I5 TFSI Turbo']
+                        }
+                    },
+                    '8S.5': {
+                        'years': (2021, 2023),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['2.5L I5 TFSI Turbo'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['2.5L I5 TFSI Turbo'],
+                            'Prestige': ['2.5L I5 TFSI Turbo']
+                        }
+                    }
+                }
+            },
+            # R8 Models (as models)
+            'R8': {
+                'body_style': 'Sports Car',
+                'years': [
+                    {'range': (2008, 2012), 'generation': '42', 'note': 'First R8, V8 and V10 engines'},
+                    {'range': (2013, 2015), 'generation': '42.5', 'note': '42.5 facelift, updated styling and performance'},
+                    {'range': (2016, 2019), 'generation': '4S', 'note': 'V10 only, more aggressive design'},
+                    {'range': (2020, 2023), 'generation': '4S.5', 'note': '4S.5 final updates before discontinuation'}
+                ],
+                'is_active': False,
+                'discontinued': 2023,
+                'generations': {
+                    '42': {
+                        'years': (2008, 2012),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.2L V8 FSI', '5.2L V10 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.2L V8 FSI', '5.2L V10 FSI'],
+                            'Prestige': ['4.2L V8 FSI', '5.2L V10 FSI']
+                        }
+                    },
+                    '42.5': {
+                        'years': (2013, 2015),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['4.2L V8 FSI', '5.2L V10 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['4.2L V8 FSI', '5.2L V10 FSI'],
+                            'Prestige': ['4.2L V8 FSI', '5.2L V10 FSI']
+                        }
+                    },
+                    '4S': {
+                        'years': (2016, 2019),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['5.2L V10 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['5.2L V10 FSI'],
+                            'Prestige': ['5.2L V10 FSI']
+                        }
+                    },
+                    '4S.5': {
+                        'years': (2020, 2023),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['5.2L V10 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['5.2L V10 FSI'],
+                            'Prestige': ['5.2L V10 FSI']
+                        }
+                    }
+                }
+            },
+            'R8 V10 Plus': {
+                'body_style': 'Sports Car',
+                'years': [
+                    {'range': (2013, 2015), 'generation': '42.5', 'note': 'High-performance R8 with track-focused setup'}
+                ],
+                'is_active': False,
+                'discontinued': 2015,
+                'generations': {
+                    '42.5': {
+                        'years': (2013, 2015),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['5.2L V10 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['5.2L V10 FSI'],
+                            'Prestige': ['5.2L V10 FSI']
+                        }
+                    }
+                }
+            },
+            'R8 Performance': {
+                'body_style': 'Sports Car',
+                'years': [
+                    {'range': (2020, 2023), 'generation': '4S.5', 'note': 'Ultimate R8 trim with maximum power and aero'}
+                ],
+                'is_active': False,
+                'discontinued': 2023,
+                'generations': {
+                    '4S.5': {
+                        'years': (2020, 2023),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['5.2L V10 FSI'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['5.2L V10 FSI'],
+                            'Prestige': ['5.2L V10 FSI']
+                        }
+                    }
+                }
+            },
+            # e-tron Performance Models (as models)
+            'e-tron S': {
+                'body_style': 'SUV',
+                'years': [
+                    {'range': (2021, 2025), 'generation': '', 'note': 'Performance electric SUV with triple motors'}
+                ],
+                'is_active': True,
+                'generations': {
+                    '': {
+                        'years': (2021, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['Triple Motor Electric'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['Triple Motor Electric'],
+                            'Prestige': ['Triple Motor Electric']
+                        }
+                    }
+                }
+            },
+            'RS e-tron GT': {
+                'body_style': 'Sedan',
+                'years': [
+                    {'range': (2022, 2025), 'generation': '', 'note': 'Ultra-high-performance electric sports sedan'}
+                ],
+                'is_active': True,
+                'generations': {
+                    '': {
+                        'years': (2022, 2025),
+                        'trims': ['Premium Plus', 'Prestige'],
+                        'engines': ['Dual Motor Electric'],
+                        'trim_engine_mapping': {
+                            'Premium Plus': ['Dual Motor Electric'],
+                            'Prestige': ['Dual Motor Electric']
                         }
                     }
                 }
@@ -481,7 +1353,7 @@ class Command(BaseCommand):
         self.stdout.write('• B8.5 (2013-2016): New MMI, LED DRLs, updated grilles')
         self.stdout.write('• B9.5 (2021+): Digital cockpit updates, new bumpers')
         self.stdout.write('• 8R.5 Q5: Updated infotainment, exterior styling changes')
-        self.stdout.write('• 8S.5 TT: Final styling updates before discontinuation')
+        '• 8S.5 TT: Final styling updates before discontinuation'
         
         # Next steps
         self.stdout.write('\\n📋 NEXT STEPS:')

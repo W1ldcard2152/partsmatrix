@@ -116,6 +116,26 @@ class Command(BaseCommand):
                 'is_active': True
             },
             
+            # S Models (Added as separate models)
+            {
+                'name': 'S3',
+                'body_style': 'Sedan/Sportback',
+                'years': [
+                    {'range': (2015, 2020), 'generation': '8V', 'note': 'First S3 in US'},
+                    {'range': (2021, 2025), 'generation': '8Y', 'note': 'Current generation S3'}
+                ],
+                'is_active': True
+            },
+            {
+                'name': 'RS3',
+                'body_style': 'Sedan/Sportback',
+                'years': [
+                    {'range': (2018, 2020), 'generation': '8V', 'note': 'First RS3 in US'},
+                    {'range': (2022, 2025), 'generation': '8Y', 'note': 'Current generation RS3'}
+                ],
+                'is_active': True
+            },
+            
             # Q-Series SUVs (Current Models)
             {
                 'name': 'Q3',
@@ -172,6 +192,29 @@ class Command(BaseCommand):
                 'discontinued': 2023
             },
             {
+                'name': 'TTS',
+                'body_style': 'Coupe/Convertible',
+                'years': [
+                    {'range': (2008, 2010), 'generation': '8J', 'note': 'First TTS'},
+                    {'range': (2011, 2015), 'generation': '8J.5', 'note': '8J.5 TTS facelift'},
+                    {'range': (2016, 2018), 'generation': '8S', 'note': 'Third generation TTS'},
+                    {'range': (2019, 2023), 'generation': '8S.5', 'note': '8S.5 TTS final updates'}
+                ],
+                'is_active': False,
+                'discontinued': 2023
+            },
+            {
+                'name': 'TT RS',
+                'body_style': 'Coupe/Convertible',
+                'years': [
+                    {'range': (2012, 2013), 'generation': '8J', 'note': 'First TT RS in US'},
+                    {'range': (2018, 2020), 'generation': '8S', 'note': 'Second generation TT RS'},
+                    {'range': (2021, 2023), 'generation': '8S.5', 'note': '8S.5 TT RS final updates'}
+                ],
+                'is_active': False,
+                'discontinued': 2023
+            },
+            {
                 'name': 'R8',
                 'body_style': 'Sports Car',
                 'years': [
@@ -179,6 +222,24 @@ class Command(BaseCommand):
                     {'range': (2013, 2015), 'generation': '42.5', 'note': '42.5 facelift, updated styling and performance'},
                     {'range': (2016, 2019), 'generation': '4S', 'note': 'V10 only, more aggressive design'},
                     {'range': (2020, 2023), 'generation': '4S.5', 'note': '4S.5 final updates before discontinuation'}
+                ],
+                'is_active': False,
+                'discontinued': 2023
+            },
+            {
+                'name': 'R8 V10 Plus',
+                'body_style': 'Sports Car',
+                'years': [
+                    {'range': (2013, 2015), 'generation': '42.5', 'note': 'High-performance R8 with track-focused setup'}
+                ],
+                'is_active': False,
+                'discontinued': 2015
+            },
+            {
+                'name': 'R8 Performance',
+                'body_style': 'Sports Car',
+                'years': [
+                    {'range': (2020, 2023), 'generation': '4S.5', 'note': 'Ultimate R8 trim with maximum power and aero'}
                 ],
                 'is_active': False,
                 'discontinued': 2023
@@ -338,6 +399,22 @@ class Command(BaseCommand):
                     {'range': (2022, 2025), 'generation': '', 'note': 'Electric sports sedan, shared with Taycan'}
                 ],
                 'is_active': True
+            },
+            {
+                'name': 'e-tron S',
+                'body_style': 'SUV',
+                'years': [
+                    {'range': (2021, 2025), 'generation': '', 'note': 'Performance electric SUV with triple motors'}
+                ],
+                'is_active': True
+            },
+            {
+                'name': 'RS e-tron GT',
+                'body_style': 'Sedan',
+                'years': [
+                    {'range': (2022, 2025), 'generation': '', 'note': 'Ultra-high-performance electric sports sedan'}
+                ],
+                'is_active': True
             }
         ]
         
@@ -441,7 +518,7 @@ class Command(BaseCommand):
         self.stdout.write('• B8.5 A4/S4 (2013): New MMI, LED DRLs, updated interior')
         self.stdout.write('• C7.5 A6/A7 (2015): Matrix LED headlights, virtual cockpit')
         self.stdout.write('• D4.5 A8 (2014): Matrix LED standard, updated MMI Touch')
-        self.stdout.write('• 4L.5 Q7 (2010): Updated styling, efficiency improvements')
+        '• 4L.5 Q7 (2010): Updated styling, efficiency improvements'
         
         # Next steps
         self.stdout.write('\\n📋 NEXT STEPS:')
