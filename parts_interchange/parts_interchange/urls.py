@@ -15,12 +15,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.api.urls')),
     path('', include('apps.parts.urls')),
 ]
+
+# Include debug toolbar URLs in development
+if settings.DEBUG:
+    try:
+        import debug_toolbar
+        urlpatterns = [
+            path('__debug__/', include(debug_toolbar.urls)),
+        ] + urlpatterns
+    except ImportError:
+        pass  # Debug toolbar not installed
 
 # Customize admin site headers
 admin.site.site_header = "Parts Interchange Database"

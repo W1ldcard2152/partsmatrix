@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.parts.models import Part, Manufacturer, PartCategory, InterchangeGroup
+from apps.parts.models import Part, Manufacturer, PartCategory, InterchangeGroup, PartGroup, PartGroupMembership
 from apps.vehicles.models import Vehicle, Make, Model, Engine, Trim
 from apps.fitments.models import Fitment
 
@@ -85,12 +85,15 @@ class FitmentSerializer(serializers.ModelSerializer):
 
 
 class InterchangeGroupSerializer(serializers.ModelSerializer):
-    parts = PartSerializer(many=True, read_only=True, source='parts.all')
+    parts_count = serializers.SerializerMethodField()
     category = PartCategorySerializer(read_only=True)
     
     class Meta:
         model = InterchangeGroup
-        fields = ['id', 'name', 'description', 'category', 'parts']
+        fields = ['id', 'name', 'description', 'category', 'parts_count']
+    
+    def get_parts_count(self, obj):
+        return obj.parts.count()
 
 
 # Simplified serializers for lookup responses
@@ -128,3 +131,58 @@ class FitmentLookupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Fitment
         fields = ['part', 'vehicle', 'position', 'quantity', 'notes']
+
+
+# Part Groups Serializers
+class PartGroupSerializer(serializers.ModelSerializer):
+    category = PartCategorySerializer(read_only=True)
+    parts_count = serializers.SerializerMethodField()
+    vehicle_coverage = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PartGroup
+        fields = [
+            'id', 'name', 'description', 'category',
+            'voltage', 'amperage', 'wattage',
+            'mounting_pattern', 'connector_type', 'thread_size',
+            'max_length', 'max_width', 'max_height',
+            'specifications', 'parts_count', 'vehicle_coverage',
+            'is_active', 'created_at'
+        ]
+    
+    def get_parts_count(self, obj):
+        return obj.memberships.count()
+    
+    def get_vehicle_coverage(self, obj):
+        return obj.get_vehicle_coverage()
+
+
+class PartGroupMembershipSerializer(serializers.ModelSerializer):
+    part = PartLookupSerializer(read_only=True)
+    part_group_name = serializers.CharField(source='part_group.name', read_only=True)
+    
+    class Meta:
+        model = PartGroupMembership
+        fields = [
+            'id', 'part', 'part_group_name', 'compatibility_level',
+            'part_voltage', 'part_amperage', 'part_wattage',
+            'installation_notes', 'year_restriction', 'application_restriction',
+            'is_verified', 'verified_by', 'verification_date'
+        ]
+
+
+class PartGroupLookupSerializer(serializers.ModelSerializer):
+    """Simplified serializer for part group lookups"""
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    parts_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PartGroup
+        fields = [
+            'id', 'name', 'description', 'category_name',
+            'voltage', 'amperage', 'mounting_pattern', 'connector_type',
+            'parts_count'
+        ]
+    
+    def get_parts_count(self, obj):
+        return obj.memberships.count()

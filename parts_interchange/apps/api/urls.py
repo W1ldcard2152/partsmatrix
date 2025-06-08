@@ -12,6 +12,7 @@ router.register(r'makes', views.MakeViewSet)
 router.register(r'models', views.ModelViewSet)
 router.register(r'engines', views.EngineViewSet)
 router.register(r'interchange-groups', views.InterchangeGroupViewSet)
+router.register(r'part-groups', views.PartGroupViewSet)
 
 app_name = 'api'
 
@@ -34,4 +35,7 @@ urlpatterns = [
     
     # Statistics endpoint
     path('stats/', views.DatabaseStatsView.as_view(), name='stats'),
+    
+    # Part Groups endpoints
+    path('junkyard-search/', views.JunkyardSearchView.as_view(), name='junkyard-search'),
 ]

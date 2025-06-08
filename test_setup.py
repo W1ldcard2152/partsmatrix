@@ -1,20 +1,18 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+"""Test script to check Django setup and run migrations"""
 import os
 import sys
 from pathlib import Path
 
-
 def main():
-    """Run administrative tasks."""
+    """Run Django check and migrations"""
     # Add the parts_interchange directory to Python path
     project_root = Path(__file__).resolve().parent
     parts_interchange_dir = project_root / 'parts_interchange'
-    apps_dir = parts_interchange_dir / 'apps'
-    sys.path.insert(0, str(apps_dir)) # Add apps directory to path
-    sys.path.insert(0, str(parts_interchange_dir)) # Add parts_interchange directory to path
+    sys.path.insert(0, str(parts_interchange_dir))
     
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'parts_interchange.settings')
+    
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -23,8 +21,16 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
-    execute_from_command_line(sys.argv)
-
+    
+    # Run system check
+    print("Running Django system check...")
+    execute_from_command_line(['manage.py', 'check'])
+    
+    # Run migrations
+    print("Running migrations...")
+    execute_from_command_line(['manage.py', 'migrate'])
+    
+    print("Setup complete! You can now run: python manage.py runserver")
 
 if __name__ == '__main__':
     main()
