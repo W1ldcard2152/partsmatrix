@@ -2,40 +2,26 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
-# Create router for ViewSets
+# Create a router and register our viewsets with it.
 router = DefaultRouter()
-router.register(r'parts', views.PartViewSet)
-router.register(r'vehicles', views.VehicleViewSet)
-router.register(r'fitments', views.FitmentViewSet)
-router.register(r'manufacturers', views.ManufacturerViewSet)
-router.register(r'makes', views.MakeViewSet)
-router.register(r'models', views.ModelViewSet)
-router.register(r'engines', views.EngineViewSet)
-router.register(r'interchange-groups', views.InterchangeGroupViewSet)
-router.register(r'part-groups', views.PartGroupViewSet)
+router.register(r'parts', views.PartViewSet, basename='part')
+router.register(r'vehicles', views.VehicleViewSet, basename='vehicle')
+router.register(r'fitments', views.FitmentViewSet, basename='fitment')
+router.register(r'manufacturers', views.ManufacturerViewSet, basename='manufacturer')
+router.register(r'makes', views.MakeViewSet, basename='make')
+router.register(r'models', views.ModelViewSet, basename='model')
+router.register(r'engines', views.EngineViewSet, basename='engine')
+router.register(r'interchange-groups', views.InterchangeGroupViewSet, basename='interchangegroup')
+router.register(r'part-groups', views.PartGroupViewSet, basename='partgroup')
 
 app_name = 'api'
 
+# The API URLs are now determined automatically by the router.
 urlpatterns = [
-    # API Root and router endpoints
     path('', include(router.urls)),
     
-    # Custom interchange lookup endpoints
-    path('lookup/part-fitments/<int:part_id>/', views.PartFitmentsView.as_view(), name='part-fitments'),
-    path('lookup/vehicle-parts/<int:vehicle_id>/', views.VehiclePartsView.as_view(), name='vehicle-parts'),
-    path('lookup/interchange/<str:part_number>/', views.InterchangeLookupView.as_view(), name='interchange-lookup'),
-    
-    # Search endpoints
-    path('search/parts/', views.PartSearchView.as_view(), name='part-search'),
-    path('search/vehicles/', views.VehicleSearchView.as_view(), name='vehicle-search'),
-    path('search/fitments/', views.FitmentSearchView.as_view(), name='fitment-search'),
-    
-    # Bulk operations
-    path('bulk/fitments/', views.BulkFitmentCreateView.as_view(), name='bulk-fitments'),
-    
-    # Statistics endpoint
-    path('stats/', views.DatabaseStatsView.as_view(), name='stats'),
-    
-    # Part Groups endpoints
+    # Custom, non-router endpoints
+    path('stats/', views.DatabaseStatsView.as_view(), name='database-stats'),
     path('junkyard-search/', views.JunkyardSearchView.as_view(), name='junkyard-search'),
+    path('bulk/fitments/', views.BulkFitmentCreateView.as_view(), name='bulk-fitment-create'),
 ]

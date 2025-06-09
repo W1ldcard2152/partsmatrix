@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>✅ Confirm Bulk Parts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .header { background: #27ae60; color: white; padding: 15px; margin: -20px -20px 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .parts-container { background: white; padding: 30px; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .part-card { border: 2px solid #ddd; border-radius: 5px; margin-bottom: 20px; padding: 20px; background: #f8f9fa; }
+        .part-card.valid { border-color: #28a745; }
+        .part-card.invalid { border-color: #dc3545; }
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #2c3e50; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
+        input:focus, select:focus, textarea:focus { border-color: #3498db; outline: none; }
+        .btn { padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; margin: 5px; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+        .part-header { background: #3498db; color: white; padding: 10px; margin: -20px -20px 15px; border-radius: 3px 3px 0 0; }
+        .status-good { color: #28a745; font-weight: bold; }
+        .status-bad { color: #dc3545; font-weight: bold; }
+        .status-warning { color: #ffc107; font-weight: bold; }
+        .fitments-preview { background: #e9ecef; padding: 10px; border-radius: 3px; margin-top: 10px; }
+        .fitments-count { font-size: 12px; color: #6c757d; }
+        .summary { background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .messages { margin-bottom: 20px; }
+        .messages div { padding: 10px; border-radius: 3px; margin-bottom: 5px; }
+        .messages .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .messages .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>✅ Confirm Bulk Parts</h1>
+            <p>Review and edit the parsed parts before creating them</p>
+        </div>
+    </div>
+
+    <div class="container">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if bulk_parsed_parts %}
+        <div class="summary">
+            <h3>📊 Summary</h3>
+            <p><strong>{{ bulk_parsed_parts|length }}</strong> parts ready for review</p>
+            <p>Review each part below, make any necessary edits, then click "Save All Parts" when ready.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="parts-container">
+                {% for parsed_part in bulk_parsed_parts %}
+                <div class="part-card {% if parsed_part.part_name and parsed_part.part_number and parsed_part.manufacturer %}valid{% else %}invalid{% endif %}">
+                    <div class="part-header">
+                        <h4>📦 Part {{ forloop.counter }} of {{ bulk_parsed_parts|length }}</h4>
+                        {% if parsed_part.part_name and parsed_part.part_number and parsed_part.manufacturer %}
+                            <span class="status-good">✅ Ready to create</span>
+                        {% else %}
+                            <span class="status-bad">❌ Missing required data</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="part_{{ forloop.counter0 }}_part_name">Part Name *</label>
+                            <input type="text" 
+                                   name="part_{{ forloop.counter0 }}_part_name" 
+                                   id="part_{{ forloop.counter0 }}_part_name"
+                                   value="{{ parsed_part.part_name|default:'' }}" 
+                                   required
+                                   placeholder="Enter part name...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="part_{{ forloop.counter0 }}_part_number">Part Number *</label>
+                            <input type="text" 
+                                   name="part_{{ forloop.counter0 }}_part_number" 
+                                   id="part_{{ forloop.counter0 }}_part_number"
+                                   value="{{ parsed_part.part_number|default:'' }}" 
+                                   required
+                                   placeholder="Enter part number...">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="part_{{ forloop.counter0 }}_manufacturer">Manufacturer *</label>
+                            <select name="part_{{ forloop.counter0 }}_manufacturer" 
+                                    id="part_{{ forloop.counter0 }}_manufacturer" 
+                                    required>
+                                <option value="">Select manufacturer...</option>
+                                {% for mfg in manufacturers %}
+                                <option value="{{ mfg.name }}" 
+                                        {% if mfg.name == parsed_part.manufacturer %}selected{% endif %}>
+                                    {{ mfg.abbreviation }} - {{ mfg.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="part_{{ forloop.counter0 }}_category">Category *</label>
+                            <select name="part_{{ forloop.counter0 }}_category" 
+                                    id="part_{{ forloop.counter0 }}_category" 
+                                    required>
+                                <option value="">Select category...</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.name }}" 
+                                        {% if cat.name == parsed_part.category_guess %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="part_{{ forloop.counter0 }}_description">Description</label>
+                        <textarea name="part_{{ forloop.counter0 }}_description" 
+                                  id="part_{{ forloop.counter0 }}_description"
+                                  rows="2" 
+                                  placeholder="Optional description...">{{ parsed_part.description|default:'' }}</textarea>
+                    </div>
+
+                    {% if parsed_part.fitments %}
+                    <div class="fitments-preview">
+                        <strong>🚗 Vehicle Fitments Found:</strong>
+                        <span class="fitments-count">({{ parsed_part.fitments|length }} vehicles)</span>
+                        <div style="margin-top: 5px; font-size: 12px; color: #6c757d;">
+                            {% for fitment in parsed_part.fitments|slice:":3" %}
+                                {{ fitment.year }} {{ fitment.make }} {{ fitment.model }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                            {% if parsed_part.fitments|length > 3 %}
+                                ... and {{ parsed_part.fitments|length|add:"-3" }} more
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="fitments-preview">
+                        <span class="status-warning">⚠️ No vehicle fitments found in parsed data</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div style="text-align: center; padding: 20px;">
+                <button type="submit" name="save_all" class="btn btn-success">
+                    💾 Save All {{ bulk_parsed_parts|length }} Parts
+                </button>
+                <a href="{% url 'parts:bulk_smart_parser' %}" class="btn btn-secondary">
+                    ⬅️ Back to Edit
+                </a>
+            </div>
+        </form>
+
+        {% else %}
+        <div class="parts-container">
+            <h2>❌ No Parts to Confirm</h2>
+            <p>No parsed parts data was found. Please go back and parse some parts first.</p>
+            <a href="{% url 'parts:bulk_smart_parser' %}" class="btn btn-secondary">⬅️ Back to Bulk Parser</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Auto-fill missing manufacturer from part name
+        document.addEventListener('DOMContentLoaded', function() {
+            const partCards = document.querySelectorAll('.part-card');
+            
+            partCards.forEach((card, index) => {
+                const partNameField = card.querySelector(`input[name="part_${index}_part_name"]`);
+                const manufacturerSelect = card.querySelector(`select[name="part_${index}_manufacturer"]`);
+                
+                if (partNameField && manufacturerSelect && !manufacturerSelect.value) {
+                    const partName = partNameField.value.toLowerCase();
+                    
+                    // Try to guess manufacturer from part name
+                    if (partName.includes('acura')) manufacturerSelect.value = 'Acura';
+                    else if (partName.includes('honda')) manufacturerSelect.value = 'Honda';
+                    else if (partName.includes('toyota')) manufacturerSelect.value = 'Toyota';
+                    else if (partName.includes('ford')) manufacturerSelect.value = 'Ford';
+                    else if (partName.includes('gm') || partName.includes('chevrolet')) manufacturerSelect.value = 'GM';
+                    else if (partName.includes('bmw')) manufacturerSelect.value = 'BMW';
+                    else if (partName.includes('mercedes')) manufacturerSelect.value = 'Mercedes-Benz';
+                    else if (partName.includes('audi')) manufacturerSelect.value = 'Audi';
+                }
+            });
+        });
+
+        // Validate form before submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const requiredFields = document.querySelectorAll('input[required], select[required]');
+            let hasErrors = false;
+            
+            requiredFields.forEach(field => {
+                if (!field.value) {
+                    field.style.borderColor = '#dc3545';
+                    hasErrors = true;
+                } else {
+                    field.style.borderColor = '#ddd';
+                }
+            });
+            
+            if (hasErrors) {
+                e.preventDefault();
+                alert('Please fill in all required fields (marked with *)');
+            }
+        });
+    </script>
+</body>
+</html>

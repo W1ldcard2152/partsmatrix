@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🧠 Smart Parts Parser</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .header { background: #8e44ad; color: white; padding: 15px; margin: -20px -20px 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .parser-container { background: white; padding: 30px; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .textarea-container { position: relative; }
+        #rawText { width: 100%; height: 300px; padding: 15px; border: 2px solid #ddd; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 12px; resize: vertical; }
+        #rawText:focus { border-color: #8e44ad; outline: none; }
+        .parse-button { background: #8e44ad; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 15px; }
+        .parse-button:hover { background: #732d91; }
+        .parse-button:disabled { background: #bdc3c7; cursor: not-allowed; }
+        .preview-container { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 20px; margin-top: 20px; display: none; }
+        .preview-item { margin-bottom: 15px; }
+        .preview-label { font-weight: bold; color: #495057; }
+        .preview-value { margin-left: 10px; }
+        .good { color: #28a745; }
+        .warning { color: #ffc107; }
+        .error { color: #dc3545; }
+        .fitments-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .fitments-table th, .fitments-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .fitments-table th { background: #f8f9fa; }
+        .recent-parts { background: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .recent-parts h3 { color: #8e44ad; margin-top: 0; }
+        .recent-part { padding: 10px; border-bottom: 1px solid #eee; }
+        .recent-part:last-child { border-bottom: none; }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .spinner { border: 4px solid #f3f3f4; border-radius: 50%; border-top: 4px solid #8e44ad; width: 30px; height: 30px; animation: spin 2s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .example-buttons { margin-bottom: 20px; }
+        .example-btn { background: #17a2b8; color: white; border: none; padding: 8px 15px; margin-right: 10px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        .example-btn:hover { background: #138496; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-link { background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 3px; margin-right: 10px; display: inline-block; }
+        .nav-link:hover { background: #5a6268; }
+        .nav-link.active { background: #8e44ad; }
+        .messages { margin-bottom: 20px; }
+        .messages div { padding: 10px; border-radius: 3px; margin-bottom: 5px; }
+        .messages .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .messages .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>🧠 Smart Parts Parser</h1>
+            <p>Paste raw part data and automatically extract part information and fitments</p>
+        </div>
+    </div>
+
+    <div class="container">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="nav-links">
+            <a href="{% url 'parts:smart_parser' %}" class="nav-link active">🧠 Smart Parser</a>
+            <a href="{% url 'parts:bulk_smart_parser' %}" class="nav-link">📋 Bulk Parser</a>
+            <a href="{% url 'parts:fast_parts_list' %}" class="nav-link">📝 Manual Entry</a>
+            <a href="{% url 'parts:fast_dashboard' %}" class="nav-link">📊 Dashboard</a>
+        </div>
+
+        <div class="parser-container">
+            <h2>🎯 Parse Part Data</h2>
+            <p>Paste raw part data from eBay, Amazon, manufacturer websites, or catalogs. The parser will automatically extract part numbers, fitments, and other details.</p>
+
+            <div class="example-buttons">
+                <button class="example-btn" onclick="loadExample('acura')">Load Acura Example</button>
+                <button class="example-btn" onclick="loadExample('brake')">Load Brake Pad Example</button>
+                <button class="example-btn" onclick="loadExample('engine')">Load Engine Part Example</button>
+                <button class="example-btn" onclick="clearText()">Clear</button>
+            </div>
+
+            <form method="post" id="parserForm">
+                {% csrf_token %}
+                <div class="textarea-container">
+                    <textarea 
+                        name="raw_text" 
+                        id="rawText" 
+                        placeholder="Paste your raw part data here...
+
+Example formats supported:
+• eBay part listings
+• Amazon ASIN data  
+• Manufacturer part catalogs
+• Vehicle fitment tables
+• OEM part specifications
+
+The parser will extract:
+✓ Part name and number
+✓ Manufacturer
+✓ Vehicle fitments
+✓ Technical specifications
+✓ Categories and descriptions"
+                        oninput="parseInRealTime()"
+                    ></textarea>
+                </div>
+
+                <button type="button" class="parse-button" onclick="parseAndPreview()" id="parseBtn">
+                    🔍 Parse & Preview
+                </button>
+                <button type="submit" class="parse-button" style="background: #28a745; margin-left: 10px;" disabled id="submitBtn">
+                    ✅ Create Part
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Parsing your data...</p>
+            </div>
+
+            <div class="preview-container" id="previewContainer">
+                <h3>📋 Parsed Results</h3>
+                <div id="previewContent"></div>
+            </div>
+        </div>
+
+        {% if recent_parts %}
+        <div class="recent-parts">
+            <h3>📅 Recently Added Parts</h3>
+            {% for part in recent_parts %}
+            <div class="recent-part">
+                <strong>{{ part.manufacturer.abbreviation }}-{{ part.part_number }}</strong>: {{ part.name }}
+                <br><small>Added {{ part.created_at|timesince }} ago</small>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        let parsedData = null;
+
+        // Example data for demonstration
+        const examples = {
+            'acura': `AC Line - Acura (80341-S87-A01)
+Genuine Acura Parts
+
+Manufacturer: Acura Part Number: 80341-S87-A01 
+
+Description: Dehyd to evaporator. Dehydrator/evap.
+
+Vehicle Fitment
+Year    Make    Model   Body & Trim     Engine & Transmission
+2003    Acura   CL      Base, Type-S    3.2L V6 - Gas
+2003    Acura   TL      Base, Type-S    3.2L V6 - Gas
+2002    Acura   CL      Base, Type-S    3.2L V6 - Gas
+2002    Acura   TL      Base, Type-S    3.2L V6 - Gas
+2001    Acura   CL      Premium, Type-S 3.2L V6 - Gas
+2001    Acura   TL      Base            3.2L V6 - Gas`,
+
+            'brake': `Front Brake Pad Set - Honda (45022-S84-A00)
+Honda Genuine Parts
+
+Part Number: 45022-S84-A00
+Manufacturer: Honda
+Description: Front brake pad set for disc brakes
+
+Vehicle Fitment
+Year    Make    Model   Body & Trim     Engine & Transmission
+2008    Honda   Accord  LX, EX         2.4L L4 - Gas
+2007    Honda   Accord  LX, EX         2.4L L4 - Gas
+2006    Honda   Accord  LX, EX         2.4L L4 - Gas
+2005    Honda   Accord  LX, EX         2.4L L4 - Gas`,
+
+            'engine': `LS1 Engine Block - GM Performance (12561168)
+General Motors Performance Parts
+
+Part Number: 12561168
+Manufacturer: GM
+Description: LS1 5.7L V8 Engine Block Assembly
+
+Vehicle Fitment
+Year    Make       Model    Body & Trim    Engine & Transmission
+2002    Chevrolet  Camaro   Z28, SS        5.7L LS1 V8 - Gas
+2001    Chevrolet  Camaro   Z28, SS        5.7L LS1 V8 - Gas
+2000    Chevrolet  Camaro   Z28, SS        5.7L LS1 V8 - Gas
+2002    Chevrolet  Corvette Base, Z06      5.7L LS1 V8 - Gas
+2001    Chevrolet  Corvette Base, Z06      5.7L LS1 V8 - Gas`
+        };
+
+        function loadExample(type) {
+            document.getElementById('rawText').value = examples[type];
+            parseInRealTime();
+        }
+
+        function clearText() {
+            document.getElementById('rawText').value = '';
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+            parsedData = null;
+        }
+
+        function parseAndPreview() {
+            const text = document.getElementById('rawText').value.trim();
+            if (!text) {
+                alert('Please paste some part data first.');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('parseBtn').disabled = true;
+
+            // Call the API to parse the text
+            fetch('{% url "parts:parse_text_api" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('parseBtn').disabled = false;
+
+                if (data.success) {
+                    parsedData = data.parsed_data;
+                    displayPreview(data.parsed_data, data.validation);
+                    document.getElementById('submitBtn').disabled = !data.validation.has_required_data;
+                } else {
+                    alert('Error parsing text: ' + data.error);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('parseBtn').disabled = false;
+                alert('Error: ' + error);
+            });
+        }
+
+        function parseInRealTime() {
+            // Optional: Add real-time parsing for immediate feedback
+            const text = document.getElementById('rawText').value.trim();
+            if (text.length > 100) {
+                // Auto-parse when user stops typing for 2 seconds
+                clearTimeout(window.parseTimeout);
+                window.parseTimeout = setTimeout(parseAndPreview, 2000);
+            }
+        }
+
+        function displayPreview(data, validation) {
+            const container = document.getElementById('previewContainer');
+            const content = document.getElementById('previewContent');
+            
+            let html = '<div class="preview-grid">';
+            
+            // Part Information
+            html += '<div class="preview-item">';
+            html += '<span class="preview-label">Part Name:</span>';
+            html += `<span class="preview-value ${data.part_name ? 'good' : 'error'}">${data.part_name || 'Not found'}</span>`;
+            html += '</div>';
+            
+            html += '<div class="preview-item">';
+            html += '<span class="preview-label">Part Number:</span>';
+            html += `<span class="preview-value ${data.part_number ? 'good' : 'error'}">${data.part_number || 'Not found'}</span>`;
+            html += '</div>';
+            
+            html += '<div class="preview-item">';
+            html += '<span class="preview-label">Manufacturer:</span>';
+            html += `<span class="preview-value ${data.manufacturer ? 'good' : 'error'}">${data.manufacturer || 'Not found'}</span>`;
+            html += '</div>';
+            
+            html += '<div class="preview-item">';
+            html += '<span class="preview-label">Category Guess:</span>';
+            html += `<span class="preview-value ${data.category_guess ? 'good' : 'warning'}">${data.category_guess || 'Unknown'}</span>`;
+            html += '</div>';
+            
+            if (data.description) {
+                html += '<div class="preview-item">';
+                html += '<span class="preview-label">Description:</span>';
+                html += `<span class="preview-value good">${data.description}</span>`;
+                html += '</div>';
+            }
+            
+            // Fitments
+            if (data.fitments && data.fitments.length > 0) {
+                html += '<div class="preview-item">';
+                html += '<span class="preview-label">Vehicle Fitments:</span>';
+                html += `<span class="preview-value good">${data.fitments.length} vehicles found</span>`;
+                html += '<table class="fitments-table">';
+                html += '<tr><th>Year</th><th>Make</th><th>Model</th><th>Trim</th><th>Engine</th></tr>';
+                
+                data.fitments.slice(0, 10).forEach(fitment => {
+                    html += `<tr>`;
+                    html += `<td>${fitment.year}</td>`;
+                    html += `<td>${fitment.make}</td>`;
+                    html += `<td>${fitment.model}</td>`;
+                    html += `<td>${fitment.trim}</td>`;
+                    html += `<td>${fitment.engine}</td>`;
+                    html += `</tr>`;
+                });
+                
+                if (data.fitments.length > 10) {
+                    html += `<tr><td colspan="5">... and ${data.fitments.length - 10} more vehicles</td></tr>`;
+                }
+                
+                html += '</table>';
+                html += '</div>';
+            } else {
+                html += '<div class="preview-item">';
+                html += '<span class="preview-label">Vehicle Fitments:</span>';
+                html += '<span class="preview-value warning">No fitments found</span>';
+                html += '</div>';
+            }
+            
+            // Validation status
+            html += '<div class="preview-item">';
+            html += '<span class="preview-label">Status:</span>';
+            if (validation.has_required_data) {
+                html += '<span class="preview-value good">✅ Ready to create part</span>';
+            } else {
+                html += '<span class="preview-value error">❌ Missing required data: ' + validation.missing_fields.join(', ') + '</span>';
+            }
+            html += '</div>';
+            
+            if (validation.warnings.length > 0) {
+                html += '<div class="preview-item">';
+                html += '<span class="preview-label">Warnings:</span>';
+                html += '<span class="preview-value warning">⚠️ ' + validation.warnings.join(', ') + '</span>';
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            
+            content.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        // Auto-focus the textarea
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('rawText').focus();
+        });
+
+        // Handle form submission
+        document.getElementById('parserForm').addEventListener('submit', function(e) {
+            if (!parsedData) {
+                e.preventDefault();
+                alert('Please parse the data first.');
+                return;
+            }
+            
+            // Store parsed data in session by submitting the form normally
+            // The Django view will handle storing it in the session
+        });
+    </script>
+</body>
+</html>

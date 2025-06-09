@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📋 Bulk Smart Parts Parser</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .header { background: #e67e22; color: white; padding: 15px; margin: -20px -20px 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .parser-container { background: white; padding: 30px; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .nav-links { margin-bottom: 20px; }
+        .nav-link { background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 3px; margin-right: 10px; display: inline-block; }
+        .nav-link:hover { background: #5a6268; }
+        .nav-link.active { background: #e67e22; }
+        textarea { width: 100%; height: 400px; padding: 15px; border: 2px solid #ddd; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 12px; resize: vertical; }
+        textarea:focus { border-color: #e67e22; outline: none; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #2c3e50; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 3px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #e67e22; color: white; }
+        .btn-primary:hover { background: #d35400; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+        .help-text { background: #e8f4fd; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .messages { margin-bottom: 20px; }
+        .messages div { padding: 10px; border-radius: 3px; margin-bottom: 5px; }
+        .messages .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .messages .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>📋 Bulk Smart Parts Parser</h1>
+            <p>Process multiple parts at once by separating them with a delimiter</p>
+        </div>
+    </div>
+
+    <div class="container">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="nav-links">
+            <a href="{% url 'parts:smart_parser' %}" class="nav-link">🧠 Smart Parser</a>
+            <a href="{% url 'parts:bulk_smart_parser' %}" class="nav-link active">📋 Bulk Parser</a>
+            <a href="{% url 'parts:fast_parts_list' %}" class="nav-link">📝 Manual Entry</a>
+            <a href="{% url 'parts:fast_dashboard' %}" class="nav-link">📊 Dashboard</a>
+        </div>
+
+        <div class="parser-container">
+            <h2>🎯 Bulk Parse Multiple Parts</h2>
+            
+            <div class="help-text">
+                <strong>How to use:</strong>
+                <ol>
+                    <li>Paste multiple part data entries below</li>
+                    <li>Separate each part with "---" or your chosen delimiter</li>
+                    <li>Click "Parse All Parts" to process them</li>
+                    <li>Review and edit each parsed part before saving</li>
+                </ol>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="separator">Separator (what separates each part):</label>
+                    <input type="text" name="separator" id="separator" value="---" placeholder="Enter separator..." style="width: 200px;">
+                    <small style="color: #6c757d; margin-left: 10px;">Default: --- (three dashes)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="bulk_text">Bulk Part Data:</label>
+                    <textarea 
+                        name="bulk_text" 
+                        id="bulk_text" 
+                        placeholder="Paste multiple parts here, separated by your delimiter...
+
+Example:
+AC Line - Acura (80341-S87-A01)
+Genuine Acura Parts
+Manufacturer: Acura Part Number: 80341-S87-A01
+Vehicle Fitment
+2003 Acura CL Base 3.2L V6
+2003 Acura TL Base 3.2L V6
+
+---
+
+Brake Pad Set - Honda (45022-S84-A00)
+Honda Genuine Parts
+Part Number: 45022-S84-A00
+Manufacturer: Honda
+Vehicle Fitment
+2008 Honda Accord LX 2.4L L4
+2007 Honda Accord EX 2.4L L4
+
+---
+
+LS1 Engine Block - GM (12561168)
+General Motors Performance Parts
+Part Number: 12561168
+Manufacturer: GM
+Vehicle Fitment
+2002 Chevrolet Camaro Z28 5.7L LS1 V8
+2001 Chevrolet Corvette Base 5.7L LS1 V8"
+                        required
+                    ></textarea>
+                </div>
+
+                <div style="text-align: center;">
+                    <button type="submit" class="btn btn-primary">🔍 Parse All Parts</button>
+                    <a href="{% url 'parts:smart_parser' %}" class="btn btn-secondary">⬅️ Back to Single Parser</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Auto-focus the textarea
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('bulk_text').focus();
+        });
+
+        // Update separator preview
+        document.getElementById('separator').addEventListener('input', function() {
+            const separator = this.value || '---';
+            const textarea = document.getElementById('bulk_text');
+            const placeholder = textarea.getAttribute('placeholder');
+            
+            // Update placeholder to show current separator
+            const updatedPlaceholder = placeholder.replace(/---/g, separator);
+            textarea.setAttribute('placeholder', updatedPlaceholder);
+        });
+    </script>
+</body>
+</html>

@@ -52,8 +52,10 @@
 
     <div class="quick-actions">
         <h3>🔥 Quick Actions</h3>
-        <a href="{% url 'fast_part_add' %}" class="action-btn success">➕ Add New Part</a>
-        <a href="{% url 'fast_parts_list' %}" class="action-btn">📋 Manage Parts</a>
+        <a href="{% url 'parts:smart_parser' %}" class="action-btn success">🧠 Smart Parser</a>
+        <a href="{% url 'parts:fast_part_add' %}" class="action-btn success">➕ Add New Part</a>
+        <a href="{% url 'parts:fast_parts_list' %}" class="action-btn">📋 Manage Parts</a>
+        <a href="{% url 'parts:bulk_smart_parser' %}" class="action-btn warning">📋 Bulk Parser</a>
         <a href="/admin/vehicles/vehicle/" class="action-btn warning">🚗 Manage Vehicles</a>
         <a href="/admin/fitments/fitment/" class="action-btn warning">🔗 Manage Fitments</a>
         <a href="/admin/" class="action-btn">⚙️ Full Admin</a>

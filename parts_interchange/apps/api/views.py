@@ -1,19 +1,17 @@
-from rest_framework import viewsets, status, filters
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q, Count, Min, Max
-from django.shortcuts import get_object_or_404
+import logging
 from django.core.cache import cache
+from django.db.models import Count, Min, Max
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_headers
-import hashlib
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, status, filters
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.parts.models import Part, Manufacturer, PartCategory, InterchangeGroup, PartGroup, PartGroupMembership
-from apps.vehicles.models import Vehicle, Make, Model, Engine, Trim
+from apps.vehicles.models import Vehicle, Make, Model, Engine
 from apps.fitments.models import Fitment
 from .serializers import (
     PartSerializer, PartLookupSerializer,
@@ -21,706 +19,321 @@ from .serializers import (
     FitmentSerializer, FitmentLookupSerializer,
     ManufacturerSerializer, MakeSerializer, ModelSerializer,
     EngineSerializer, InterchangeGroupSerializer,
-    PartGroupSerializer, PartGroupLookupSerializer
+    PartGroupSerializer, PartGroupMembershipSerializer
 )
 
+logger = logging.getLogger(__name__)
+
+# --- Constants ---
+CACHE_TIMEOUT_SHORT = 300  # 5 minutes
+CACHE_TIMEOUT_MEDIUM = 600  # 10 minutes
+CACHE_TIMEOUT_LONG = 900  # 15 minutes
+
+# --- Base Classes ---
+
+class CachedReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
+    """Base ViewSet for read-only models with caching."""
+    permission_classes = [IsAuthenticated]
+
+    @method_decorator(cache_page(CACHE_TIMEOUT_LONG))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @method_decorator(cache_page(CACHE_TIMEOUT_LONG))
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+# --- Model ViewSets ---
 
 class PartViewSet(viewsets.ModelViewSet):
-    """API endpoint for automotive parts - OPTIMIZED"""
-    queryset = Part.objects.select_related(
-        'manufacturer', 'category'
-    ).filter(is_active=True).prefetch_related('fitments__vehicle')
+    """API endpoint for automotive parts."""
+    queryset = Part.objects.select_related('manufacturer', 'category').filter(is_active=True)
     serializer_class = PartSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['manufacturer', 'category', 'is_active']
+    filterset_fields = ['manufacturer', 'category']
     search_fields = ['part_number', 'name', 'description']
     ordering_fields = ['part_number', 'name', 'created_at']
     ordering = ['manufacturer__name', 'part_number']
 
-    @method_decorator(cache_page(300))  # Cache for 5 minutes
-    @method_decorator(vary_on_headers('User-Agent'))
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAdminUser()]
+        return super().get_permissions()
+
+    @method_decorator(cache_page(CACHE_TIMEOUT_SHORT))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     @action(detail=True, methods=['get'])
     def fitments(self, request, pk=None):
-        """Get all fitments for a specific part - CACHED"""
+        """Get all vehicles that a specific part fits."""
         cache_key = f"part_fitments_{pk}"
-        cached_result = cache.get(cache_key)
-        
-        if cached_result:
-            return Response(cached_result)
-        
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+
         part = self.get_object()
         fitments = Fitment.objects.filter(part=part).select_related(
             'vehicle__make', 'vehicle__model', 'vehicle__trim', 'vehicle__engine'
-        )[:100]  # Limit results
+        )[:100]
         
         serializer = FitmentLookupSerializer(fitments, many=True)
-        result = serializer.data
-        
-        # Cache for 10 minutes
-        cache.set(cache_key, result, 600)
-        return Response(result)
+        cache.set(cache_key, serializer.data, CACHE_TIMEOUT_MEDIUM)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
     def interchanges(self, request, pk=None):
-        """Get interchange parts for a specific part - CACHED"""
+        """Get interchange parts for a specific part."""
         cache_key = f"part_interchanges_{pk}"
-        cached_result = cache.get(cache_key)
-        
-        if cached_result:
-            return Response(cached_result)
-        
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+
         part = self.get_object()
         interchange_groups = InterchangeGroup.objects.filter(parts__part=part)
         serializer = InterchangeGroupSerializer(interchange_groups, many=True)
-        result = serializer.data
-        
-        # Cache for 15 minutes
-        cache.set(cache_key, result, 900)
-        return Response(result)
+        cache.set(cache_key, serializer.data, CACHE_TIMEOUT_MEDIUM)
+        return Response(serializer.data)
 
 
 class VehicleViewSet(viewsets.ModelViewSet):
-    """API endpoint for vehicles - OPTIMIZED"""
-    queryset = Vehicle.objects.select_related(
-        'make', 'model', 'trim', 'engine'
-    ).filter(is_active=True)
+    """API endpoint for vehicles."""
+    queryset = Vehicle.objects.select_related('make', 'model', 'trim', 'engine').filter(is_active=True)
     serializer_class = VehicleSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['year', 'make', 'model', 'trim', 'engine', 'transmission_type', 'drivetrain']
-    search_fields = ['make__name', 'model__name', 'trim__name', 'engine__name']
+    filterset_fields = ['year', 'make', 'model', 'trim', 'engine']
+    search_fields = ['make__name', 'model__name', 'trim__name']
     ordering_fields = ['year', 'make__name', 'model__name']
     ordering = ['year', 'make__name', 'model__name']
 
-    @method_decorator(cache_page(300))
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAdminUser()]
+        return super().get_permissions()
+
+    @method_decorator(cache_page(CACHE_TIMEOUT_SHORT))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     @action(detail=True, methods=['get'])
     def parts(self, request, pk=None):
-        """Get all parts that fit this vehicle - CACHED"""
+        """Get all parts that fit this vehicle."""
         cache_key = f"vehicle_parts_{pk}"
-        cached_result = cache.get(cache_key)
-        
-        if cached_result:
-            return Response(cached_result)
-        
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+
         vehicle = self.get_object()
         fitments = Fitment.objects.filter(vehicle=vehicle).select_related(
             'part__manufacturer', 'part__category'
-        )[:100]  # Limit results
+        )[:100]
         
         serializer = FitmentLookupSerializer(fitments, many=True)
-        result = serializer.data
-        
-        # Cache for 10 minutes
-        cache.set(cache_key, result, 600)
-        return Response(result)
+        cache.set(cache_key, serializer.data, CACHE_TIMEOUT_MEDIUM)
+        return Response(serializer.data)
 
 
 class FitmentViewSet(viewsets.ModelViewSet):
-    """API endpoint for part-vehicle fitments - OPTIMIZED"""
+    """API endpoint for part-vehicle fitments."""
     queryset = Fitment.objects.select_related(
         'part__manufacturer', 'part__category',
-        'vehicle__make', 'vehicle__model', 'vehicle__trim', 'vehicle__engine'
+        'vehicle__make', 'vehicle__model'
     )
     serializer_class = FitmentSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['part', 'vehicle', 'position', 'is_verified']
-    search_fields = ['part__part_number', 'part__name', 'vehicle__make__name', 'vehicle__model__name']
-    ordering_fields = ['created_at', 'part__part_number']
+    filterset_fields = ['part', 'vehicle', 'is_verified']
+    search_fields = ['part__part_number', 'vehicle__make__name', 'vehicle__model__name']
     ordering = ['-created_at']
 
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAdminUser()]
+        return super().get_permissions()
 
-class ManufacturerViewSet(viewsets.ReadOnlyModelViewSet):
-    """API endpoint for manufacturers - CACHED"""
+
+class ManufacturerViewSet(CachedReadOnlyViewSet):
+    """API endpoint for manufacturers."""
     queryset = Manufacturer.objects.all()
     serializer_class = ManufacturerSerializer
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'abbreviation']
     ordering = ['name']
 
-    @method_decorator(cache_page(900))  # Cache for 15 minutes
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
-
-class MakeViewSet(viewsets.ReadOnlyModelViewSet):
-    """API endpoint for vehicle makes - CACHED"""
+class MakeViewSet(CachedReadOnlyViewSet):
+    """API endpoint for vehicle makes."""
     queryset = Make.objects.filter(is_active=True)
     serializer_class = MakeSerializer
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name']
     ordering = ['name']
 
-    @method_decorator(cache_page(900))  # Cache for 15 minutes
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
-
-class ModelViewSet(viewsets.ReadOnlyModelViewSet):
-    """API endpoint for vehicle models - CACHED"""
+class ModelViewSet(CachedReadOnlyViewSet):
+    """API endpoint for vehicle models."""
     queryset = Model.objects.select_related('make').filter(is_active=True)
     serializer_class = ModelSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['make']
     search_fields = ['name', 'make__name']
     ordering = ['make__name', 'name']
 
-    @method_decorator(cache_page(900))  # Cache for 15 minutes
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
-
-class EngineViewSet(viewsets.ReadOnlyModelViewSet):
-    """API endpoint for engines - CACHED"""
+class EngineViewSet(CachedReadOnlyViewSet):
+    """API endpoint for engines."""
     queryset = Engine.objects.all()
     serializer_class = EngineSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['fuel_type', 'aspiration', 'cylinders']
     search_fields = ['name', 'engine_code']
     ordering = ['name']
 
-    @method_decorator(cache_page(900))  # Cache for 15 minutes
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
-
-class InterchangeGroupViewSet(viewsets.ReadOnlyModelViewSet):
-    """API endpoint for interchange groups - CACHED"""
+class InterchangeGroupViewSet(CachedReadOnlyViewSet):
+    """API endpoint for interchange groups."""
     queryset = InterchangeGroup.objects.select_related('category')
     serializer_class = InterchangeGroupSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category']
     search_fields = ['name', 'description']
     ordering = ['name']
 
-    @method_decorator(cache_page(900))  # Cache for 15 minutes
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
-
-# Custom API Views for specific lookup operations
-class PartFitmentsView(APIView):
-    """Get all vehicles that a specific part fits - CACHED"""
-    
-    def get(self, request, part_id):
-        cache_key = f"part_lookup_{part_id}"
-        cached_result = cache.get(cache_key)
-        
-        if cached_result:
-            return Response(cached_result)
-        
-        part = get_object_or_404(Part, id=part_id, is_active=True)
-        fitments = Fitment.objects.filter(part=part).select_related(
-            'vehicle__make', 'vehicle__model', 'vehicle__trim', 'vehicle__engine'
-        )[:100]  # Limit results
-        
-        data = {
-            'part': PartLookupSerializer(part).data,
-            'fitments': FitmentLookupSerializer(fitments, many=True).data,
-            'total_vehicles': fitments.count()
-        }
-        
-        # Cache for 10 minutes
-        cache.set(cache_key, data, 600)
-        return Response(data)
-
-
-class VehiclePartsView(APIView):
-    """Get all parts that fit a specific vehicle - CACHED"""
-    
-    def get(self, request, vehicle_id):
-        cache_key = f"vehicle_lookup_{vehicle_id}"
-        cached_result = cache.get(cache_key)
-        
-        if cached_result:
-            return Response(cached_result)
-        
-        vehicle = get_object_or_404(Vehicle, id=vehicle_id, is_active=True)
-        fitments = Fitment.objects.filter(vehicle=vehicle).select_related(
-            'part__manufacturer', 'part__category'
-        )[:100]  # Limit results
-        
-        data = {
-            'vehicle': VehicleLookupSerializer(vehicle).data,
-            'fitments': FitmentLookupSerializer(fitments, many=True).data,
-            'total_parts': fitments.count()
-        }
-        
-        # Cache for 10 minutes
-        cache.set(cache_key, data, 600)
-        return Response(data)
-
-
-class InterchangeLookupView(APIView):
-    """Look up interchange parts by part number - CACHED"""
-    
-    def get(self, request, part_number):
-        cache_key = f"interchange_lookup_{part_number}"
-        cached_result = cache.get(cache_key)
-        
-        if cached_result:
-            return Response(cached_result)
-        
-        # Find the part
-        try:
-            part = Part.objects.select_related('manufacturer', 'category').get(
-                part_number=part_number, is_active=True
-            )
-        except Part.DoesNotExist:
-            return Response(
-                {'error': f'Part number {part_number} not found'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # Get interchange groups for this part
-        interchange_groups = InterchangeGroup.objects.filter(
-            parts__part=part
-        ).prefetch_related('parts__part__manufacturer')
-        
-        # Get all interchangeable parts
-        interchangeable_parts = []
-        for group in interchange_groups:
-            group_parts = Part.objects.filter(
-                partinterchange__interchange_group=group,
-                is_active=True
-            ).exclude(id=part.id).select_related('manufacturer', 'category')[:20]  # Limit
-            interchangeable_parts.extend(group_parts)
-        
-        data = {
-            'original_part': PartLookupSerializer(part).data,
-            'interchange_groups': InterchangeGroupSerializer(interchange_groups, many=True).data,
-            'interchangeable_parts': PartLookupSerializer(interchangeable_parts, many=True).data,
-            'total_interchanges': len(interchangeable_parts)
-        }
-        
-        # Cache for 15 minutes
-        cache.set(cache_key, data, 900)
-        return Response(data)
-
-
-class PartSearchView(APIView):
-    """Advanced part search with multiple criteria - CACHED"""
-    
-    def get(self, request):
-        # Create cache key from query parameters
-        query_hash = hashlib.md5(
-            str(sorted(request.GET.items())).encode()
-        ).hexdigest()
-        cache_key = f"part_search_{query_hash}"
-        
-        cached_result = cache.get(cache_key)
-        if cached_result:
-            return Response(cached_result)
-        
-        queryset = Part.objects.select_related('manufacturer', 'category').filter(is_active=True)
-        
-        # Search parameters
-        part_number = request.GET.get('part_number')
-        name = request.GET.get('name')
-        manufacturer = request.GET.get('manufacturer')
-        category = request.GET.get('category')
-        
-        # Apply filters efficiently
-        if part_number:
-            queryset = queryset.filter(part_number__icontains=part_number)
-        if name:
-            queryset = queryset.filter(name__icontains=name)
-        if manufacturer:
-            queryset = queryset.filter(manufacturer__name__icontains=manufacturer)
-        if category:
-            queryset = queryset.filter(category__name__icontains=category)
-        
-        # Limit and serialize
-        queryset = queryset[:50]  # Reduced limit
-        serializer = PartLookupSerializer(queryset, many=True)
-        
-        result = {
-            'results': serializer.data,
-            'count': len(serializer.data)
-        }
-        
-        # Cache for 5 minutes
-        cache.set(cache_key, result, 300)
-        return Response(result)
-
-
-class VehicleSearchView(APIView):
-    """Advanced vehicle search with multiple criteria - CACHED"""
-    
-    def get(self, request):
-        # Create cache key from query parameters
-        query_hash = hashlib.md5(
-            str(sorted(request.GET.items())).encode()
-        ).encode()
-        cache_key = f"vehicle_search_{query_hash.hex()}"
-        
-        cached_result = cache.get(cache_key)
-        if cached_result:
-            return Response(cached_result)
-        
-        queryset = Vehicle.objects.select_related(
-            'make', 'model', 'trim', 'engine'
-        ).filter(is_active=True)
-        
-        # Search parameters
-        year = request.GET.get('year')
-        make = request.GET.get('make')
-        model = request.GET.get('model')
-        trim = request.GET.get('trim')
-        engine = request.GET.get('engine')
-        
-        # Apply filters
-        if year:
-            queryset = queryset.filter(year=year)
-        if make:
-            queryset = queryset.filter(make__name__icontains=make)
-        if model:
-            queryset = queryset.filter(model__name__icontains=model)
-        if trim:
-            queryset = queryset.filter(trim__name__icontains=trim)
-        if engine:
-            queryset = queryset.filter(engine__name__icontains=engine)
-        
-        # Limit results
-        queryset = queryset[:50]  # Reduced limit
-        
-        serializer = VehicleLookupSerializer(queryset, many=True)
-        result = {
-            'results': serializer.data,
-            'count': len(serializer.data)
-        }
-        
-        # Cache for 5 minutes
-        cache.set(cache_key, result, 300)
-        return Response(result)
-
-
-class FitmentSearchView(APIView):
-    """Search fitments by part or vehicle criteria - CACHED"""
-    
-    def get(self, request):
-        # Create cache key from query parameters
-        query_hash = hashlib.md5(
-            str(sorted(request.GET.items())).encode()
-        ).hexdigest()
-        cache_key = f"fitment_search_{query_hash}"
-        
-        cached_result = cache.get(cache_key)
-        if cached_result:
-            return Response(cached_result)
-        
-        queryset = Fitment.objects.select_related(
-            'part__manufacturer', 'part__category',
-            'vehicle__make', 'vehicle__model', 'vehicle__trim', 'vehicle__engine'
-        )
-        
-        # Search parameters
-        part_number = request.GET.get('part_number')
-        vehicle_year = request.GET.get('vehicle_year')
-        vehicle_make = request.GET.get('vehicle_make')
-        vehicle_model = request.GET.get('vehicle_model')
-        
-        # Apply filters
-        if part_number:
-            queryset = queryset.filter(part__part_number__icontains=part_number)
-        if vehicle_year:
-            queryset = queryset.filter(vehicle__year=vehicle_year)
-        if vehicle_make:
-            queryset = queryset.filter(vehicle__make__name__icontains=vehicle_make)
-        if vehicle_model:
-            queryset = queryset.filter(vehicle__model__name__icontains=vehicle_model)
-        
-        # Limit results
-        queryset = queryset[:50]  # Reduced limit
-        
-        serializer = FitmentLookupSerializer(queryset, many=True)
-        result = {
-            'results': serializer.data,
-            'count': len(serializer.data)
-        }
-        
-        # Cache for 5 minutes
-        cache.set(cache_key, result, 300)
-        return Response(result)
-
-
-class BulkFitmentCreateView(APIView):
-    """Bulk create fitments from uploaded data"""
-    
-    def post(self, request):
-        # This would handle bulk fitment creation
-        # Implementation depends on your specific data format
-        return Response({
-            'message': 'Bulk fitment creation endpoint - implementation pending',
-            'status': 'not_implemented'
-        }, status=status.HTTP_501_NOT_IMPLEMENTED)
-
-
-class DatabaseStatsView(APIView):
-    """Get database statistics - HEAVILY CACHED"""
-    
-    @method_decorator(cache_page(900))  # Cache for 15 minutes
-    def get(self, request):
-        cache_key = "database_stats"
-        stats = cache.get(cache_key)
-        
-        if not stats:
-            # Generate stats - this is expensive so cache well
-            stats = {
-                'parts': {
-                    'total': Part.objects.count(),
-                    'active': Part.objects.filter(is_active=True).count(),
-                    'by_manufacturer': dict(
-                        Part.objects.values_list('manufacturer__name').annotate(
-                            count=Count('id')
-                        ).order_by('-count')[:5]  # Only top 5
-                    )
-                },
-                'vehicles': {
-                    'total': Vehicle.objects.count(),
-                    'active': Vehicle.objects.filter(is_active=True).count(),
-                    'by_make': dict(
-                        Vehicle.objects.values_list('make__name').annotate(
-                            count=Count('id')
-                        ).order_by('-count')[:5]  # Only top 5
-                    ),
-                    'year_range': {
-                        'earliest': Vehicle.objects.aggregate(min_year=Min('year'))['min_year'],
-                        'latest': Vehicle.objects.aggregate(max_year=Max('year'))['max_year']
-                    }
-                },
-                'fitments': {
-                    'total': Fitment.objects.count(),
-                    'verified': Fitment.objects.filter(is_verified=True).count(),
-                    'by_category': dict(
-                        Fitment.objects.values_list('part__category__name').annotate(
-                            count=Count('id')
-                        ).order_by('-count')[:5]  # Only top 5
-                    )
-                },
-                'interchange_groups': InterchangeGroup.objects.count()
-            }
-            
-            # Cache for 15 minutes
-            cache.set(cache_key, stats, 900)
-        
-        return Response(stats)
-
-
-# Part Groups API Endpoints
-class PartGroupViewSet(viewsets.ReadOnlyModelViewSet):
-    """API endpoint for part groups - CACHED"""
+class PartGroupViewSet(CachedReadOnlyViewSet):
+    """API endpoint for part groups."""
     queryset = PartGroup.objects.select_related('category').filter(is_active=True)
     serializer_class = PartGroupSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'voltage', 'amperage']
     search_fields = ['name', 'description', 'mounting_pattern', 'connector_type']
     ordering = ['category__name', 'name']
 
-    @method_decorator(cache_page(900))  # Cache for 15 minutes
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
     @action(detail=True, methods=['get'])
     def compatible_parts(self, request, pk=None):
-        """Get all parts in this part group with compatibility info"""
-        cache_key = f"part_group_parts_{pk}"
-        cached_result = cache.get(cache_key)
-        
-        if cached_result:
-            return Response(cached_result)
-        
-        part_group = self.get_object()
-        memberships = PartGroupMembership.objects.filter(
-            part_group=part_group
-        ).select_related(
-            'part__manufacturer', 'part__category'
-        ).annotate(
-            fitment_count=Count('part__fitments')
-        ).order_by('compatibility_level', '-fitment_count')
-        
-        # Group by compatibility level
-        result = {
-            'part_group': {
-                'name': part_group.name,
-                'description': part_group.description,
-                'category': part_group.category.name,
-                'specifications': {
-                    'voltage': part_group.voltage,
-                    'amperage': part_group.amperage,
-                    'wattage': part_group.wattage,
-                    'mounting_pattern': part_group.mounting_pattern,
-                    'connector_type': part_group.connector_type
-                }
-            },
-            'compatible_parts': {
-                'IDENTICAL': [],
-                'COMPATIBLE': [],
-                'CONDITIONAL': []
-            },
-            'total_parts': memberships.count()
-        }
-        
-        for membership in memberships:
-            part_data = {
-                'part_number': membership.part.part_number,
-                'manufacturer': membership.part.manufacturer.abbreviation,
-                'name': membership.part.name,
-                'fitment_count': membership.fitment_count,
-                'installation_notes': membership.installation_notes,
-                'year_restriction': membership.year_restriction,
-                'is_verified': membership.is_verified
-            }
-            
-            result['compatible_parts'][membership.compatibility_level].append(part_data)
-        
-        # Cache for 10 minutes
-        cache.set(cache_key, result, 600)
-        return Response(result)
+        """Get all parts in this part group."""
+        cache_key = f"part_group_compatible_parts_{pk}"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
 
-    @action(detail=True, methods=['get'])
-    def vehicle_coverage(self, request, pk=None):
-        """Get vehicle coverage for parts in this group"""
         part_group = self.get_object()
+        memberships = PartGroupMembership.objects.filter(part_group=part_group).select_related(
+            'part__manufacturer'
+        ).order_by('compatibility_level')
         
-        # Get all vehicles that parts in this group fit
-        vehicles = Vehicle.objects.filter(
-            fitments__part__part_group_memberships__part_group=part_group
-        ).select_related('make', 'model').distinct()
-        
-        coverage = {
-            'total_vehicles': vehicles.count(),
-            'makes': list(vehicles.values_list('make__name', flat=True).distinct()),
-            'year_range': {
-                'earliest': vehicles.aggregate(min_year=Min('year'))['min_year'],
-                'latest': vehicles.aggregate(max_year=Max('year'))['max_year']
-            },
-            'sample_vehicles': [
-                f"{v.year} {v.make.name} {v.model.name}"
-                for v in vehicles[:10]
-            ]
+        # This logic can be complex, so for now we serialize the memberships directly
+        # A more advanced implementation could group them by compatibility level
+        serializer = PartGroupMembershipSerializer(memberships, many=True)
+        cache.set(cache_key, serializer.data, CACHE_TIMEOUT_MEDIUM)
+        return Response(serializer.data)
+
+
+# --- Custom API Views ---
+
+class DatabaseStatsView(APIView):
+    """Get database statistics."""
+    permission_classes = [IsAdminUser]
+
+    @method_decorator(cache_page(CACHE_TIMEOUT_LONG))
+    def get(self, request):
+        stats = {
+            'parts': {'total': Part.objects.count(), 'active': Part.objects.filter(is_active=True).count()},
+            'vehicles': {'total': Vehicle.objects.count(), 'active': Vehicle.objects.filter(is_active=True).count()},
+            'fitments': {'total': Fitment.objects.count(), 'verified': Fitment.objects.filter(is_verified=True).count()},
+            'interchange_groups': InterchangeGroup.objects.count(),
+            'part_groups': PartGroup.objects.count(),
+            'year_range': Vehicle.objects.aggregate(min_year=Min('year'), max_year=Max('year')),
         }
-        
-        return Response(coverage)
+        return Response(stats)
 
 
 class JunkyardSearchView(APIView):
-    """Junkyard search API - Find compatible parts for vehicles"""
-    
-    def get(self, request):
-        # Search parameters
-        vehicle_id = request.GET.get('vehicle_id')
-        part_type = request.GET.get('part_type')
-        year = request.GET.get('year')
-        make = request.GET.get('make')
-        model = request.GET.get('model')
-        
+    """
+    Junkyard search: Find compatible parts for a given vehicle.
+    Query params: `vehicle_id` or (`year`, `make`, `model`), and optional `part_type`.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get_vehicle(self, request):
+        vehicle_id = request.query_params.get('vehicle_id')
         if vehicle_id:
-            # Search by specific vehicle ID
-            try:
-                vehicle = Vehicle.objects.get(id=vehicle_id)
-            except Vehicle.DoesNotExist:
-                return Response({'error': 'Vehicle not found'}, status=404)
-        elif year and make and model:
-            # Search by year/make/model
-            vehicles = Vehicle.objects.filter(
-                year=year,
-                make__name__icontains=make,
-                model__name__icontains=model
+            return Vehicle.objects.filter(id=vehicle_id).first()
+
+        year = request.query_params.get('year')
+        make = request.query_params.get('make')
+        model = request.query_params.get('model')
+
+        if not (year and make and model):
+            return None
+        
+        return Vehicle.objects.filter(
+            year=year, make__name__iexact=make, model__name__iexact=model
+        ).first()
+
+    def get(self, request, *args, **kwargs):
+        vehicle = self.get_vehicle(request)
+        if not vehicle:
+            return Response(
+                {'error': 'A valid vehicle_id or year, make, and model are required.'},
+                status=status.HTTP_400_BAD_REQUEST
             )
-            if not vehicles.exists():
-                return Response({'error': 'No vehicles found'}, status=404)
-            vehicle = vehicles.first()
-        else:
-            return Response({
-                'error': 'Provide vehicle_id OR year/make/model parameters'
-            }, status=400)
+
+        part_type = request.query_params.get('part_type')
         
-        # Find parts that fit this vehicle
-        fitments = Fitment.objects.filter(
-            vehicle=vehicle
-        ).select_related('part__manufacturer', 'part__category')
-        
+        # Find parts that directly fit the vehicle
+        fitments = Fitment.objects.filter(vehicle=vehicle).select_related('part__manufacturer', 'part__category')
         if part_type:
-            fitments = fitments.filter(
-                Q(part__name__icontains=part_type) |
-                Q(part__category__name__icontains=part_type)
-            )
+            fitments = fitments.filter(part__category__name__icontains=part_type)
         
-        # Find part groups for these parts
-        part_groups_data = {}
-        direct_parts = []
-        
-        for fitment in fitments[:50]:  # Limit results
-            part = fitment.part
-            direct_parts.append({
-                'part_number': part.part_number,
-                'manufacturer': part.manufacturer.abbreviation,
-                'name': part.name,
-                'category': part.category.name,
-                'position': fitment.position,
-                'notes': fitment.notes
+        direct_parts_serializer = FitmentLookupSerializer(fitments[:50], many=True) # Limit results
+
+        # Find part groups associated with these direct-fit parts
+        part_ids = [f.part.id for f in fitments]
+        part_groups = PartGroup.objects.filter(
+            memberships__part__id__in=part_ids
+        ).distinct().prefetch_related('memberships__part__manufacturer')
+
+        part_groups_data = []
+        for group in part_groups:
+            memberships = group.memberships.all()
+            part_groups_data.append({
+                'group_name': group.name,
+                'compatible_parts': PartGroupMembershipSerializer(memberships[:20], many=True).data # Limit results
             })
-            
-            # Find part groups this part belongs to
-            memberships = PartGroupMembership.objects.filter(
-                part=part
-            ).select_related('part_group')
-            
-            for membership in memberships:
-                group = membership.part_group
-                if group.id not in part_groups_data:
-                    # Get all compatible parts in this group
-                    all_memberships = PartGroupMembership.objects.filter(
-                        part_group=group
-                    ).select_related('part__manufacturer')[:20]  # Limit
-                    
-                    compatible_parts = []
-                    for m in all_memberships:
-                        compatible_parts.append({
-                            'part_number': m.part.part_number,
-                            'manufacturer': m.part.manufacturer.abbreviation,
-                            'name': m.part.name,
-                            'compatibility_level': m.compatibility_level,
-                            'installation_notes': m.installation_notes,
-                            'is_verified': m.is_verified
-                        })
-                    
-                    part_groups_data[group.id] = {
-                        'name': group.name,
-                        'description': group.description,
-                        'category': group.category.name,
-                        'specifications': {
-                            'voltage': group.voltage,
-                            'amperage': group.amperage,
-                            'mounting_pattern': group.mounting_pattern,
-                            'connector_type': group.connector_type
-                        },
-                        'compatible_parts': compatible_parts,
-                        'total_compatible': len(compatible_parts)
-                    }
-        
-        result = {
-            'vehicle': {
-                'id': vehicle.id,
-                'description': str(vehicle)
-            },
-            'search_criteria': {
-                'part_type': part_type
-            },
-            'direct_fit_parts': direct_parts,
-            'part_groups': list(part_groups_data.values()),
-            'summary': {
-                'direct_parts_count': len(direct_parts),
-                'part_groups_count': len(part_groups_data),
-                'total_compatible_parts': sum(
-                    group['total_compatible'] for group in part_groups_data.values()
+
+        return Response({
+            'vehicle': VehicleLookupSerializer(vehicle).data,
+            'direct_fit_parts': direct_parts_serializer.data,
+            'compatible_part_groups': part_groups_data,
+        })
+
+class BulkFitmentCreateView(APIView):
+    """Bulk create fitments. Expects a list of {'part_id': 1, 'vehicle_id': 2} objects."""
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        fitment_data = request.data
+        if not isinstance(fitment_data, list):
+            return Response(
+                {'error': 'Expected a list of fitment objects.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        fitments_to_create = []
+        for item in fitment_data:
+            part_id = item.get('part_id')
+            vehicle_id = item.get('vehicle_id')
+            if part_id and vehicle_id:
+                fitments_to_create.append(
+                    Fitment(part_id=part_id, vehicle_id=vehicle_id)
                 )
-            }
-        }
         
-        return Response(result)
+        try:
+            Fitment.objects.bulk_create(fitments_to_create, ignore_conflicts=True)
+            return Response(
+                {'message': f'{len(fitments_to_create)} fitments processed.'},
+                status=status.HTTP_201_CREATED
+            )
+        except Exception as e:
+            logger.error(f"Bulk fitment creation failed: {e}")
+            return Response(
+                {'error': 'An error occurred during bulk creation.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

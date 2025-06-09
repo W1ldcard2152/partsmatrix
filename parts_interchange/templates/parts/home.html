@@ -67,14 +67,20 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
+                    <a href="{% url 'parts:smart_parser' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-brain"></i> Smart Parser
+                    </a>
+                    <a href="{% url 'parts:fast_dashboard' %}" class="btn btn-outline-success">
+                        <i class="fas fa-tachometer-alt"></i> Fast Dashboard
+                    </a>
                     <a href="{% url 'parts:search' %}" class="btn btn-outline-primary">
                         <i class="fas fa-search"></i> Search Parts
                     </a>
                     <a href="/api/parts/" class="btn btn-outline-info">
                         <i class="fas fa-code"></i> Browse API
                     </a>
-                    <a href="/admin/" class="btn btn-outline-success">
-                        <i class="fas fa-plus"></i> Add New Parts
+                    <a href="/admin/" class="btn btn-outline-secondary">
+                        <i class="fas fa-cog"></i> Admin Panel
                     </a>
                 </div>
             </div>
