@@ -39,6 +39,7 @@ LOCAL_APPS = [
     'apps.vehicles',
     'apps.fitments',
     'apps.api',
+    'apps.ebay_notifications',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

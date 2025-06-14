@@ -1,7 +1,7 @@
 @echo off
 echo === Testing Smart Parser Setup ===
 
-cd parts_interchange
+set PYTHONPATH=%PYTHONPATH%;%CD%
 
 REM Make sure we have categories
 echo Checking for A/C categories...

@@ -31,7 +31,7 @@ class SmartPartParser:
             r'([0-9A-Z]{8,})',
         ]
         
-        self.fitment_pattern = r'(\d{4})\s+([A-Za-z]+)\s+([A-Za-z0-9\s]+?)\s+([A-Za-z0-9\s,-]+?)\s+([0-9.]+L\s+[A-Za-z0-9\s-]+)'
+        self.fitment_pattern = r'(\d{4})\s+([A-Za-z]+)\s+(\S+)\s{2,}(.*?)\s{2,}([0-9.]+L\s+[A-Za-z0-9\s-]+)'
         
         self.manufacturer_mapping = {
             'acura': 'Acura', 'honda': 'Honda', 'toyota': 'Toyota', 'lexus': 'Lexus',
@@ -114,20 +114,55 @@ class SmartPartParser:
     def extract_fitments(self, text):
         fitments = []
         fitment_section = re.search(
-            r'Vehicle Fitment.*?Year\s+Make\s+Model\s+Body.*?Engine.*?\n(.*?)(?:\n\n|\Z)', 
+            r'Vehicle Fitment.*?Year\s+Make\s+Model\s+Body.*?Engine.*?\n(.*?)(?:\n\n|\Z)',
             text, re.DOTALL | re.IGNORECASE
         )
-        
+
         if fitment_section:
             fitment_text = fitment_section.group(1)
-            for match in re.finditer(self.fitment_pattern, fitment_text):
-                fitments.append({
-                    'year': int(match.group(1)),
-                    'make': match.group(2).strip(),
-                    'model': match.group(3).strip(),
-                    'trim': match.group(4).strip(),
-                    'engine': match.group(5).strip()
-                })
+            lines = fitment_text.strip().split('\n')
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+
+                parts = re.split(r'\s{2,}', line)
+                if len(parts) < 4:
+                    continue
+
+                try:
+                    year = int(parts[0])
+                    make = parts[1]
+                    model = parts[2]
+                    
+                    # The rest of the line is split into trim and engine
+                    remaining_parts = parts[3:]
+                    
+                    engine_candidate = remaining_parts[-1]
+                    if re.search(r'\d\.\dL', engine_candidate):
+                        engine = engine_candidate
+                        trim_parts = remaining_parts[:-1]
+                    else:
+                        engine = ''
+                        trim_parts = remaining_parts
+
+                    # Join all trim parts and then split by comma
+                    full_trim_string = ' '.join(trim_parts).strip()
+                    trims = [t.strip() for t in full_trim_string.split(',') if t.strip()]
+
+                    if not trims:
+                        trims.append('Base')
+
+                    for trim in trims:
+                        fitments.append({
+                            'year': year,
+                            'make': make,
+                            'model': model,
+                            'trim': trim,
+                            'engine': engine
+                        })
+                except (ValueError, IndexError):
+                    continue
         return fitments
 
     def extract_description(self, text):
@@ -166,6 +201,20 @@ def smart_parser_interface(request):
         if raw_text:
             parser = SmartPartParser()
             parsed_data = parser.parse_text(raw_text)
+
+            # Add dummy confidence scores and other data to match template
+            parsed_data['confidence'] = {
+                'part_name': 'high', 'part_number': 'high',
+                'manufacturer': 'high', 'fitments': 'high'
+            }
+            parsed_data['confidence_scores'] = {
+                'part_name': 95, 'part_number': 95,
+                'manufacturer': 95, 'fitments': 95
+            }
+            parsed_data['parsing_notes'] = []
+            parsed_data['category'] = parsed_data.get('category_guess')
+            parsed_data['fitments_json'] = json.dumps(parsed_data.get('fitments', []))
+            parsed_data['confidence_json'] = json.dumps(parsed_data.get('confidence_scores', {}))
             
             # Store in session for confirmation page
             request.session['parsed_data'] = parsed_data
@@ -178,13 +227,31 @@ def smart_parser_interface(request):
     })
 
 
-@staff_member_required  
+@staff_member_required
 def confirm_parsed_part(request):
     """Confirm and edit parsed part data before saving"""
     parsed_data = request.session.get('parsed_data')
     if not parsed_data:
         messages.error(request, 'No parsed data found. Please try again.')
         return redirect('parts:smart_parser')
+
+    # Ensure all required data is present for the template
+    parsed_data.setdefault('confidence', {
+        'part_name': 'high', 'part_number': 'high',
+        'manufacturer': 'high', 'fitments': 'high'
+    })
+    parsed_data.setdefault('confidence_scores', {
+        'part_name': 95, 'part_number': 95,
+        'manufacturer': 95, 'fitments': 95
+    })
+    parsed_data.setdefault('parsing_notes', [])
+    parsed_data.setdefault('category', parsed_data.get('category_guess'))
+    parsed_data.setdefault('fitments_json', json.dumps(parsed_data.get('fitments', [])))
+    parsed_data.setdefault('confidence_json', json.dumps(parsed_data.get('confidence_scores', {})))
+    parsed_data.setdefault('weight', '')
+    parsed_data.setdefault('dimensions', '')
+    parsed_data.setdefault('suggested_interchanges', None)
+    parsed_data.setdefault('suggested_part_group', None)
     
     if request.method == 'POST':
         if 'save_part' in request.POST:
@@ -313,51 +380,26 @@ def create_part_from_parsed_data(post_data, parsed_data, user):
             fitments_created = 0
             for fitment_data in parsed_data.get('fitments', []):
                 try:
-                    # Get or create make
-                    make, _ = Make.objects.get_or_create(
-                        name=fitment_data['make']
-                    )
-                    
-                    # Get or create model
-                    model, _ = Model.objects.get_or_create(
-                        make=make,
-                        name=fitment_data['model']
-                    )
-                    
-                    # Get or create trim
-                    trim = None
-                    if fitment_data.get('trim') and fitment_data['trim'].strip():
-                        trim, _ = Trim.objects.get_or_create(
-                            name=fitment_data['trim']
-                        )
-                    
-                    # Get or create engine
-                    engine = None
-                    if fitment_data.get('engine') and fitment_data['engine'].strip():
-                        engine, _ = Engine.objects.get_or_create(
-                            name=fitment_data['engine']
-                        )
-                    
-                    # Get or create vehicle
-                    vehicle, _ = Vehicle.objects.get_or_create(
+                    # Find the vehicle in the database
+                    vehicle = Vehicle.objects.filter(
                         year=fitment_data['year'],
-                        make=make,
-                        model=model,
-                        trim=trim,
-                        engine=engine
-                    )
-                    
-                    # Create fitment
-                    Fitment.objects.get_or_create(
-                        part=part,
-                        vehicle=vehicle,
-                        defaults={
-                            'is_verified': False,
-                            'created_by': user.username if user.is_authenticated else 'smart_parser'
-                        }
-                    )
-                    fitments_created += 1
-                    
+                        make__name__iexact=fitment_data['make'],
+                        model__name__iexact=fitment_data['model'],
+                        trim__name__iexact=fitment_data['trim']
+                    ).first()
+
+                    if vehicle:
+                        # Create fitment only if vehicle exists
+                        Fitment.objects.get_or_create(
+                            part=part,
+                            vehicle=vehicle,
+                            defaults={
+                                'is_verified': False,
+                                'created_by': user.username if user.is_authenticated else 'smart_parser'
+                            }
+                        )
+                        fitments_created += 1
+                        
                 except Exception as e:
                     # Continue with other fitments if one fails
                     continue

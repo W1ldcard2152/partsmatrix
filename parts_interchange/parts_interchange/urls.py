@@ -20,6 +20,7 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.api.urls')),
+    path('ebay/', include('apps.ebay_notifications.urls')),
     path('', include('apps.parts.urls')),
 ]
 

@@ -1,0 +1,17 @@
+# eBay API Requirements
+# Additional dependencies for eBay parts extraction
+
+# HTTP requests
+requests>=2.31.0
+
+# Data processing
+pandas>=2.1.0
+
+# Environment management
+python-decouple>=3.8
+
+# CSV handling (included in Python standard library)
+# json (included in Python standard library)
+# re (included in Python standard library)
+# dataclasses (included in Python 3.7+)
+# logging (included in Python standard library)
