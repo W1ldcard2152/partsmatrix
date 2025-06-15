@@ -1,0 +1,26 @@
+{
+  "thresholds": {
+    "critical": {
+      "pending_conflicts_age_days": 30,
+      "processing_failure_rate_percent": 20,
+      "low_confidence_rate_percent": 50,
+      "raw_data_staleness_days": 7
+    },
+    "warning": {
+      "pending_conflicts_age_days": 14,
+      "processing_failure_rate_percent": 10,
+      "low_confidence_rate_percent": 30,
+      "raw_data_staleness_days": 3
+    }
+  },
+  "notification_settings": {
+    "email_alerts": false,
+    "log_alerts": true,
+    "console_alerts": true
+  },
+  "monitoring_intervals": {
+    "system_health_check_hours": 24,
+    "conflict_review_days": 7,
+    "quality_analysis_days": 30
+  }
+}

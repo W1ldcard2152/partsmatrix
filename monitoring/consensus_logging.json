@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "verbose": {
+      "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+      "style": "{"
+    },
+    "simple": {
+      "format": "{levelname} {message}",
+      "style": "{"
+    },
+    "consensus": {
+      "format": "[CONSENSUS] {asctime} {levelname} {module}: {message}",
+      "style": "{"
+    }
+  },
+  "handlers": {
+    "consensus_file": {
+      "level": "INFO",
+      "class": "logging.handlers.RotatingFileHandler",
+      "filename": "./monitoring\\consensus_processing.log",
+      "maxBytes": 10485760,
+      "backupCount": 5,
+      "formatter": "consensus"
+    },
+    "consensus_error": {
+      "level": "ERROR",
+      "class": "logging.handlers.RotatingFileHandler",
+      "filename": "./monitoring\\consensus_errors.log",
+      "maxBytes": 5242880,
+      "backupCount": 3,
+      "formatter": "verbose"
+    },
+    "console": {
+      "level": "WARNING",
+      "class": "logging.StreamHandler",
+      "formatter": "simple"
+    }
+  },
+  "loggers": {
+    "apps.parts.consensus": {
+      "handlers": [
+        "consensus_file",
+        "consensus_error",
+        "console"
+      ],
+      "level": "INFO",
+      "propagate": false
+    },
+    "apps.parts.management.commands.process_consensus_fitments": {
+      "handlers": [
+        "consensus_file",
+        "consensus_error"
+      ],
+      "level": "INFO",
+      "propagate": false
+    }
+  }
+}

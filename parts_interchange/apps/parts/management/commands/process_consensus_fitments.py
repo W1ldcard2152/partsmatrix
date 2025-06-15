@@ -21,6 +21,11 @@ class Command(BaseCommand):
             help='Process all parts with new data'
         )
         parser.add_argument(
+            '--new-data-only',
+            action='store_true',
+            help='Process only parts with new raw data since last update'
+        )
+        parser.add_argument(
             '--min-listings', 
             type=int, 
             default=2, 
@@ -64,9 +69,11 @@ class Command(BaseCommand):
                 self.process_single_part(processor, options['part_number'], options)
             elif options['all']:
                 self.process_all_parts(processor, options)
+            elif options['new_data_only']:
+                self.process_new_data_only(processor, options)
             else:
                 self.stdout.write(
-                    self.style.ERROR('Must specify either --part-number or --all')
+                    self.style.ERROR('Must specify --part-number, --all, or --new-data-only')
                 )
                 return
                 
@@ -154,6 +161,88 @@ class Command(BaseCommand):
                 f'  Parts processed: {result["total_parts_processed"]}\n'
                 f'  Fitments created/updated: {result["total_fitments_processed"]}\n'
                 f'  Conflicts identified: {result["total_conflicts_identified"]}'
+            )
+        )
+        
+        # Show updated stats
+        self.show_stats(processor)
+    
+    def process_new_data_only(self, processor, options):
+        """Process only parts with new raw data since last consensus update"""
+        min_listings = options['min_listings']
+        
+        # Find parts with raw data newer than their last consensus update
+        from django.db import models
+        from django.db.models import Max, Count
+        
+        # Get parts with recent raw data
+        recent_raw_parts = (
+            RawListingData.objects
+            .values('part_number')
+            .annotate(
+                listing_count=Count('id'),
+                latest_raw=Max('extraction_date')
+            )
+            .filter(listing_count__gte=min_listings)
+        )
+        
+        # Find which parts need updating
+        candidates = []
+        for part_data in recent_raw_parts:
+            part_number = part_data['part_number']
+            latest_raw = part_data['latest_raw']
+            
+            # Check if consensus data exists and when it was last updated
+            latest_consensus = (
+                ConsensusFitment.objects
+                .filter(part_number=part_number)
+                .aggregate(latest_update=Max('last_updated'))
+            )['latest_update']
+            
+            # Include if no consensus exists or raw data is newer
+            if not latest_consensus or latest_raw > latest_consensus:
+                candidates.append(part_number)
+        
+        total_candidates = len(candidates)
+        self.stdout.write(f'Found {total_candidates} part numbers with new data to process')
+        
+        if total_candidates == 0:
+            self.stdout.write(
+                self.style.WARNING('No parts found with new data requiring processing')
+            )
+            return
+        
+        if options['dry_run']:
+            self.stdout.write('\nParts that would be processed:')
+            for part_number in candidates[:10]:  # Show first 10
+                self.stdout.write(f'  {part_number}')
+            if total_candidates > 10:
+                self.stdout.write(f'  ... and {total_candidates - 10} more')
+            return
+        
+        # Process candidates
+        self.stdout.write('Starting new data processing...')
+        
+        processed = 0
+        total_conflicts = 0
+        
+        for part_number in candidates:
+            try:
+                result = processor.process_part_number(part_number)
+                processed += result.get('processed', 0)
+                total_conflicts += result.get('conflicts', 0)
+            except Exception as e:
+                self.stdout.write(
+                    self.style.ERROR(f'Error processing {part_number}: {e}')
+                )
+        
+        # Show summary
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'New data processing complete:\n'
+                f'  Parts with new data: {total_candidates}\n'
+                f'  Fitments processed: {processed}\n'
+                f'  Conflicts identified: {total_conflicts}'
             )
         )
         
