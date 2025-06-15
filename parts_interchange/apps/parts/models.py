@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from decimal import Decimal
 
 
 class Manufacturer(models.Model):
@@ -256,3 +257,144 @@ class PartGroupMembership(models.Model):
             if years:
                 return f"{min(years)}-{max(years)}"
         return "No fitments"
+
+
+# ===== CONSENSUS-BASED FITMENT MODELS (Phase 1) =====
+
+class RawListingData(models.Model):
+    """Store individual marketplace listing data ('quarks')"""
+    part_number = models.CharField(max_length=50, db_index=True)
+    
+    # Vehicle fitment (brand only, not part brand)
+    vehicle_year = models.IntegerField()
+    vehicle_make = models.CharField(max_length=50)
+    vehicle_model = models.CharField(max_length=50)
+    vehicle_trim = models.CharField(max_length=50, blank=True)
+    vehicle_engine = models.CharField(max_length=50, blank=True)
+    
+    # Source tracking for quality weighting
+    source_ebay_item_id = models.CharField(max_length=20, blank=True)
+    seller_feedback_count = models.IntegerField(null=True)
+    seller_is_business = models.BooleanField(default=False)
+    listing_title = models.TextField()
+    listing_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    extraction_date = models.DateTimeField(auto_now_add=True)
+    
+    # Quality indicators
+    is_verified_seller = models.BooleanField(default=False)
+    has_oem_reference = models.BooleanField(default=False)
+    has_detailed_description = models.BooleanField(default=False)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['part_number', 'extraction_date']),
+            models.Index(fields=['vehicle_year', 'vehicle_make', 'vehicle_model']),
+        ]
+        ordering = ['-extraction_date']
+    
+    def __str__(self):
+        return f"{self.part_number} → {self.vehicle_year} {self.vehicle_make} {self.vehicle_model}"
+    
+    def get_fitment_signature(self):
+        """Get unique fitment signature for grouping"""
+        return f"{self.vehicle_year}|{self.vehicle_make}|{self.vehicle_model}|{self.vehicle_trim}|{self.vehicle_engine}"
+    
+    def calculate_quality_weight(self):
+        """Calculate quality weight for consensus processing"""
+        weight = Decimal('1.0')  # Base weight
+        
+        # Business seller bonus
+        if self.seller_is_business:
+            weight += Decimal('0.3')
+        
+        # Feedback count bonus (capped)
+        if self.seller_feedback_count:
+            feedback_bonus = min(self.seller_feedback_count / 1000, 0.5)
+            weight += Decimal(str(feedback_bonus))
+        
+        # Quality indicators
+        if self.has_oem_reference:
+            weight += Decimal('0.2')
+        if self.has_detailed_description:
+            weight += Decimal('0.1')
+        if self.is_verified_seller:
+            weight += Decimal('0.2')
+        
+        return weight
+
+
+class ConsensusFitment(models.Model):
+    """Processed consensus fitment data ('atoms')"""
+    STATUS_CHOICES = [
+        ('HIGH_CONFIDENCE', '80%+ confidence - Ready for production'),
+        ('MEDIUM_CONFIDENCE', '60-79% confidence - Likely accurate'),
+        ('LOW_CONFIDENCE', '40-59% confidence - Use with caution'),
+        ('NEEDS_REVIEW', 'Conflicting data - Manual review required'),
+        ('VERIFIED', 'Manually verified by expert'),
+        ('REJECTED', 'Determined to be incorrect')
+    ]
+    
+    part_number = models.CharField(max_length=50, db_index=True)
+    
+    # Consensus vehicle fitment
+    vehicle_year = models.IntegerField()
+    vehicle_make = models.CharField(max_length=50)
+    vehicle_model = models.CharField(max_length=50)
+    vehicle_trim = models.CharField(max_length=50, blank=True)
+    vehicle_engine = models.CharField(max_length=50, blank=True)
+    
+    # Consensus metrics
+    confidence_score = models.DecimalField(max_digits=5, decimal_places=2)  # 0-100
+    supporting_listings_count = models.IntegerField()
+    total_weight_score = models.DecimalField(max_digits=8, decimal_places=2)
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    # Status tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    
+    # Linking to source data
+    supporting_raw_listings = models.ManyToManyField(RawListingData, related_name='consensus_fitments')
+    
+    class Meta:
+        unique_together = ('part_number', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'vehicle_trim', 'vehicle_engine')
+        indexes = [
+            models.Index(fields=['part_number', 'confidence_score']),
+            models.Index(fields=['vehicle_year', 'vehicle_make', 'vehicle_model']),
+            models.Index(fields=['status', 'confidence_score']),
+        ]
+        ordering = ['-confidence_score', 'part_number']
+    
+    def __str__(self):
+        return f"{self.part_number} → {self.vehicle_year} {self.vehicle_make} {self.vehicle_model} ({self.confidence_score}%)"
+    
+    def get_fitment_signature(self):
+        """Get unique fitment signature"""
+        return f"{self.vehicle_year}|{self.vehicle_make}|{self.vehicle_model}|{self.vehicle_trim}|{self.vehicle_engine}"
+    
+    def is_production_ready(self):
+        """Check if fitment is ready for production use"""
+        return self.status in ['HIGH_CONFIDENCE', 'VERIFIED'] and self.confidence_score >= 80
+
+
+class ConflictingFitment(models.Model):
+    """Track fitments that need manual review"""
+    RESOLUTION_STATUS_CHOICES = [
+        ('PENDING', 'Awaiting review'),
+        ('RESOLVED', 'Conflict resolved'),
+        ('DISMISSED', 'False positive conflict')
+    ]
+    
+    part_number = models.CharField(max_length=50)
+    conflict_description = models.TextField()
+    conflicting_listings = models.ManyToManyField(RawListingData)
+    resolution_status = models.CharField(max_length=20, choices=RESOLUTION_STATUS_CHOICES, default='PENDING')
+    created_date = models.DateTimeField(auto_now_add=True)
+    resolved_date = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.CharField(max_length=100, blank=True)
+    resolution_notes = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-created_date']
+    
+    def __str__(self):
+        return f"{self.part_number} - {self.conflict_description[:50]}..."

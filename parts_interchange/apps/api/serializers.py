@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from apps.parts.models import Part, Manufacturer, PartCategory, InterchangeGroup, PartGroup, PartGroupMembership
+from apps.parts.models import (
+    Part, Manufacturer, PartCategory, InterchangeGroup, PartGroup, PartGroupMembership,
+    RawListingData, ConsensusFitment, ConflictingFitment
+)
 from apps.vehicles.models import Vehicle, Make, Model, Engine, Trim
 from apps.fitments.models import Fitment
 

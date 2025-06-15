@@ -1,0 +1,574 @@
+# Consensus-Based Fitment System Implementation Roadmap
+
+## Overview
+
+This roadmap implements a consensus-based fitment system that treats individual marketplace listings as data points ("quarks") to build reliable fitment data for part numbers ("atoms"). The system addresses the challenge of creating accurate interchange data from inconsistent used parts marketplace listings.
+
+## Core Concept
+
+**Problem**: Used parts sellers list different fitments for the same part number, and with no new parts available for vehicles older than 2015, we can't verify against OEM data.
+
+**Solution**: Treat multiple listings as data points. If part number 1432255e appears in 6 listings where 4 agree on fitment and 2 differ, use majority consensus with confidence scoring.
+
+**Benefits**:
+- Leverages existing marketplace data
+- Improves accuracy over time as more data is collected
+- Provides transparency through confidence scoring
+- Handles outliers and conflicting data systematically
+
+## Implementation Phases
+
+### Phase 1: Database Schema Updates (Week 1)
+
+#### New Models Required
+
+**1. RawListingData Model**
+```python
+class RawListingData(models.Model):
+    """Store individual marketplace listing data ('quarks')"""
+    part_number = models.CharField(max_length=50, db_index=True)
+    
+    # Vehicle fitment (brand only, not part brand)
+    vehicle_year = models.IntegerField()
+    vehicle_make = models.CharField(max_length=50)
+    vehicle_model = models.CharField(max_length=50)
+    vehicle_trim = models.CharField(max_length=50, blank=True)
+    vehicle_engine = models.CharField(max_length=50, blank=True)
+    
+    # Source tracking for quality weighting
+    source_ebay_item_id = models.CharField(max_length=20, blank=True)
+    seller_feedback_count = models.IntegerField(null=True)
+    seller_is_business = models.BooleanField(default=False)
+    listing_title = models.TextField()
+    listing_price = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    extraction_date = models.DateTimeField(auto_now_add=True)
+    
+    # Quality indicators
+    is_verified_seller = models.BooleanField(default=False)
+    has_oem_reference = models.BooleanField(default=False)
+    has_detailed_description = models.BooleanField(default=False)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['part_number', 'extraction_date']),
+            models.Index(fields=['vehicle_year', 'vehicle_make', 'vehicle_model']),
+        ]
+```
+
+**2. ConsensusFitment Model**
+```python
+class ConsensusFitment(models.Model):
+    """Processed consensus fitment data ('atoms')"""
+    part_number = models.CharField(max_length=50, db_index=True)
+    
+    # Consensus vehicle fitment
+    vehicle_year = models.IntegerField()
+    vehicle_make = models.CharField(max_length=50)
+    vehicle_model = models.CharField(max_length=50)
+    vehicle_trim = models.CharField(max_length=50, blank=True)
+    vehicle_engine = models.CharField(max_length=50, blank=True)
+    
+    # Consensus metrics
+    confidence_score = models.DecimalField(max_digits=5, decimal_places=2)  # 0-100
+    supporting_listings_count = models.IntegerField()
+    total_weight_score = models.DecimalField(max_digits=8, decimal_places=2)
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    # Status tracking
+    status = models.CharField(max_length=20, choices=[
+        ('HIGH_CONFIDENCE', '80%+ confidence - Ready for production'),
+        ('MEDIUM_CONFIDENCE', '60-79% confidence - Likely accurate'),
+        ('LOW_CONFIDENCE', '40-59% confidence - Use with caution'),
+        ('NEEDS_REVIEW', 'Conflicting data - Manual review required'),
+        ('VERIFIED', 'Manually verified by expert'),
+        ('REJECTED', 'Determined to be incorrect')
+    ])
+    
+    # Linking to source data
+    supporting_raw_listings = models.ManyToManyField(RawListingData, related_name='consensus_fitments')
+    
+    class Meta:
+        unique_together = ('part_number', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'vehicle_trim', 'vehicle_engine')
+        indexes = [
+            models.Index(fields=['part_number', 'confidence_score']),
+            models.Index(fields=['vehicle_year', 'vehicle_make', 'vehicle_model']),
+            models.Index(fields=['status', 'confidence_score']),
+        ]
+```
+
+**3. ConflictingFitment Model**
+```python
+class ConflictingFitment(models.Model):
+    """Track fitments that need manual review"""
+    part_number = models.CharField(max_length=50)
+    conflict_description = models.TextField()
+    conflicting_listings = models.ManyToManyField(RawListingData)
+    resolution_status = models.CharField(max_length=20, choices=[
+        ('PENDING', 'Awaiting review'),
+        ('RESOLVED', 'Conflict resolved'),
+        ('DISMISSED', 'False positive conflict')
+    ])
+    created_date = models.DateTimeField(auto_now_add=True)
+    resolved_date = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.CharField(max_length=100, blank=True)
+    resolution_notes = models.TextField(blank=True)
+```
+
+#### Migration Commands
+```bash
+cd parts_interchange
+python manage.py makemigrations parts
+python manage.py migrate
+```
+
+### Phase 2: Consensus Engine Development (Week 2)
+
+#### Core Processing Logic
+
+**1. Fitment Consensus Processor**
+```python
+class FitmentConsensusProcessor:
+    """Convert raw listing data (quarks) into consensus fitments (atoms)"""
+    
+    def process_part_number(self, part_number):
+        """Process all raw listings for a specific part number"""
+        raw_listings = RawListingData.objects.filter(part_number=part_number)
+        
+        if raw_listings.count() < 2:
+            return  # Need at least 2 data points for consensus
+        
+        # Group listings by fitment signature
+        fitment_groups = self.group_by_fitment_signature(raw_listings)
+        
+        # Calculate consensus for each group
+        for signature, listings in fitment_groups.items():
+            consensus_data = self.calculate_consensus(listings)
+            self.update_or_create_consensus_fitment(part_number, signature, consensus_data, listings)
+        
+        # Identify conflicts
+        self.identify_conflicts(part_number, fitment_groups)
+    
+    def group_by_fitment_signature(self, raw_listings):
+        """Group listings by unique vehicle fitment combination"""
+        fitment_groups = {}
+        
+        for listing in raw_listings:
+            signature = f"{listing.vehicle_year}|{listing.vehicle_make}|{listing.vehicle_model}|{listing.vehicle_trim}|{listing.vehicle_engine}"
+            
+            if signature not in fitment_groups:
+                fitment_groups[signature] = []
+            fitment_groups[signature].append(listing)
+        
+        return fitment_groups
+    
+    def calculate_consensus(self, listings):
+        """Apply quality weighting and calculate confidence"""
+        total_weight = 0
+        listing_count = len(listings)
+        
+        for listing in listings:
+            weight = 1.0  # Base weight
+            
+            # Quality multipliers
+            if listing.seller_is_business:
+                weight *= 1.5  # Professional sellers more reliable
+            
+            if listing.seller_feedback_count and listing.seller_feedback_count > 1000:
+                weight *= 1.2  # High-volume sellers more experienced
+            
+            if listing.has_oem_reference:
+                weight *= 1.3  # OEM references add credibility
+            
+            if listing.has_detailed_description:
+                weight *= 1.1  # Detailed listings show knowledge
+            
+            if listing.listing_price and listing.listing_price > 50:
+                weight *= 1.1  # Higher-priced items often more serious sellers
+            
+            total_weight += weight
+        
+        # Calculate confidence score (0-100)
+        base_confidence = min(listing_count * 20, 80)  # Cap base at 80%
+        weight_bonus = min((total_weight - listing_count) * 5, 15)  # Up to 15% bonus
+        confidence = min(base_confidence + weight_bonus, 95)  # Cap total at 95%
+        
+        return {
+            'confidence_score': confidence,
+            'supporting_count': listing_count,
+            'total_weight': total_weight,
+            'status': self.determine_status(confidence)
+        }
+    
+    def determine_status(self, confidence):
+        """Determine fitment status based on confidence score"""
+        if confidence >= 80:
+            return 'HIGH_CONFIDENCE'
+        elif confidence >= 60:
+            return 'MEDIUM_CONFIDENCE'
+        elif confidence >= 40:
+            return 'LOW_CONFIDENCE'
+        else:
+            return 'NEEDS_REVIEW'
+    
+    def identify_conflicts(self, part_number, fitment_groups):
+        """Identify potential conflicts requiring manual review"""
+        if len(fitment_groups) <= 1:
+            return  # No conflicts possible
+        
+        # Look for suspicious patterns
+        year_conflicts = self.check_year_conflicts(fitment_groups)
+        platform_conflicts = self.check_platform_conflicts(fitment_groups)
+        
+        if year_conflicts or platform_conflicts:
+            self.create_conflict_record(part_number, fitment_groups, year_conflicts + platform_conflicts)
+    
+    def check_year_conflicts(self, fitment_groups):
+        """Check for conflicting year ranges"""
+        conflicts = []
+        years = []
+        
+        for signature, listings in fitment_groups.items():
+            year = listings[0].vehicle_year
+            years.append(year)
+        
+        # Flag if years span more than expected generation length
+        if max(years) - min(years) > 8:  # Most generations are 6-8 years
+            conflicts.append(f"Suspicious year range: {min(years)}-{max(years)}")
+        
+        return conflicts
+```
+
+**2. Management Command**
+```python
+# apps/parts/management/commands/process_consensus_fitments.py
+class Command(BaseCommand):
+    help = 'Process raw listing data into consensus fitments'
+    
+    def add_arguments(self, parser):
+        parser.add_argument('--part-number', help='Process specific part number')
+        parser.add_argument('--all', action='store_true', help='Process all parts with new data')
+        parser.add_argument('--min-listings', type=int, default=2, help='Minimum listings required')
+        parser.add_argument('--dry-run', action='store_true', help='Show what would be processed')
+    
+    def handle(self, *args, **options):
+        processor = FitmentConsensusProcessor()
+        
+        if options['part_number']:
+            processor.process_part_number(options['part_number'])
+        elif options['all']:
+            self.process_all_parts(processor, options['min_listings'], options['dry_run'])
+```
+
+### Phase 3: Scraper Integration Updates (Week 3)
+
+#### Modified Scraper Logic
+
+**1. Update Existing Scraper**
+```python
+def process_ebay_listing(self, listing_data):
+    """Extract and store raw listing data instead of creating parts directly"""
+    
+    # Extract fitment data from listing title/description
+    parsed_fitments = self.extract_fitment_data(listing_data['title'])
+    
+    # Extract all part numbers from listing (handle superseded numbers)
+    part_numbers = self.extract_part_numbers(listing_data['title'], listing_data.get('description', ''))
+    
+    # Create raw listing records for each part number x fitment combination
+    for fitment in parsed_fitments:
+        for part_num in part_numbers:
+            # Clean and standardize part number
+            clean_part_num = self.clean_part_number(part_num)
+            
+            # Determine quality indicators
+            has_oem_ref = self.has_oem_reference(listing_data['title'])
+            has_detailed_desc = len(listing_data.get('description', '')) > 200
+            
+            RawListingData.objects.get_or_create(
+                part_number=clean_part_num,
+                source_ebay_item_id=listing_data['item_id'],
+                defaults={
+                    'vehicle_year': fitment['year'],
+                    'vehicle_make': fitment['make'],
+                    'vehicle_model': fitment['model'],
+                    'vehicle_trim': fitment.get('trim', ''),
+                    'vehicle_engine': fitment.get('engine', ''),
+                    'seller_feedback_count': listing_data.get('seller_feedback_count'),
+                    'seller_is_business': listing_data.get('seller_is_business', False),
+                    'listing_title': listing_data['title'],
+                    'listing_price': listing_data.get('price'),
+                    'has_oem_reference': has_oem_ref,
+                    'has_detailed_description': has_detailed_desc,
+                }
+            )
+    
+    # Process consensus after collecting raw data
+    for part_num in part_numbers:
+        self.trigger_consensus_processing(self.clean_part_number(part_num))
+
+def extract_part_numbers(self, title, description=''):
+    """Extract all part numbers, including superseded numbers"""
+    part_numbers = []
+    text = f"{title} {description}"
+    
+    # Multiple patterns for different part number formats
+    patterns = [
+        r'(?:OEM|OE|Part #|P/N|PN)\s*:?\s*([A-Z0-9\-]{6,})',  # OEM: 12345AB
+        r'([A-Z]{2,}\s*[0-9]{4,}[A-Z]*)',  # GM12345A format
+        r'([0-9]{4,}[A-Z]{2,})',  # 12345AB format
+        r'(?:Replaces|Supersedes|Also fits)\s*:?\s*([A-Z0-9\-\s,]+)',  # Superseded numbers
+    ]
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Handle comma-separated superseded numbers
+            if ',' in match:
+                part_numbers.extend([p.strip() for p in match.split(',')])
+            else:
+                part_numbers.append(match.strip())
+    
+    return [pn for pn in part_numbers if len(pn) >= 6]  # Filter minimum length
+```
+
+**2. Batch Processing Commands**
+```bash
+# Run scraper to collect raw data
+python manage.py run_ebay_scraper --category "AC Compressors" --brand "Acura"
+
+# Process raw data into consensus fitments
+python manage.py process_consensus_fitments --all --min-listings 2
+
+# Review conflicts
+python manage.py review_fitment_conflicts --status NEEDS_REVIEW
+```
+
+### Phase 4: API Enhancement (Week 4)
+
+#### New API Endpoints
+
+**1. Consensus Fitments API**
+```python
+# GET /api/consensus-fitments/?part_number=1432255e
+class ConsensusFitmentListView(APIView):
+    def get(self, request):
+        part_number = request.query_params.get('part_number')
+        min_confidence = request.query_params.get('min_confidence', 60)
+        
+        fitments = ConsensusFitment.objects.filter(
+            part_number=part_number,
+            confidence_score__gte=min_confidence
+        ).order_by('-confidence_score')
+        
+        return Response({
+            'part_number': part_number,
+            'fitments': ConsensusFitmentSerializer(fitments, many=True).data,
+            'total_count': fitments.count()
+        })
+
+# GET /api/parts-for-vehicle/?year=2010&make=ford&model=f-150
+class PartsForVehicleView(APIView):
+    def get(self, request):
+        year = request.query_params.get('year')
+        make = request.query_params.get('make')
+        model = request.query_params.get('model')
+        category = request.query_params.get('category')  # Optional filter
+        
+        fitments = ConsensusFitment.objects.filter(
+            vehicle_year=year,
+            vehicle_make__iexact=make,
+            vehicle_model__iexact=model,
+            status__in=['HIGH_CONFIDENCE', 'MEDIUM_CONFIDENCE', 'VERIFIED']
+        )
+        
+        if category:
+            # Join with part category data
+            fitments = fitments.filter(part__category__name__icontains=category)
+        
+        # Group by confidence level
+        high_confidence = fitments.filter(confidence_score__gte=80)
+        medium_confidence = fitments.filter(confidence_score__range=[60, 79])
+        
+        return Response({
+            'vehicle': f"{year} {make} {model}",
+            'high_confidence_parts': ConsensusFitmentSerializer(high_confidence, many=True).data,
+            'medium_confidence_parts': ConsensusFitmentSerializer(medium_confidence, many=True).data,
+            'total_parts': fitments.count()
+        })
+
+# GET /api/interchange/?part_number=1432255e&vehicle=2010-ford-f150
+class InterchangeView(APIView):
+    """Find other parts that fit the same vehicle (junkyard search)"""
+    def get(self, request):
+        part_number = request.query_params.get('part_number')
+        vehicle_string = request.query_params.get('vehicle')  # "2010-ford-f150"
+        
+        # Parse vehicle string
+        year, make, model = vehicle_string.split('-')[:3]
+        
+        # Find all parts that fit this vehicle
+        compatible_fitments = ConsensusFitment.objects.filter(
+            vehicle_year=year,
+            vehicle_make__iexact=make,
+            vehicle_model__iexact=model,
+            status__in=['HIGH_CONFIDENCE', 'MEDIUM_CONFIDENCE', 'VERIFIED']
+        ).exclude(part_number=part_number)
+        
+        return Response({
+            'original_part': part_number,
+            'vehicle': f"{year} {make} {model}",
+            'compatible_parts': ConsensusFitmentSerializer(compatible_fitments, many=True).data,
+            'interchange_count': compatible_fitments.count()
+        })
+```
+
+**2. Data Quality Endpoints**
+```python
+# GET /api/data-quality/conflicts/
+class ConflictReviewView(APIView):
+    """Review fitments needing manual attention"""
+    permission_classes = [IsAdminUser]
+    
+    def get(self, request):
+        conflicts = ConflictingFitment.objects.filter(
+            resolution_status='PENDING'
+        ).order_by('-created_date')
+        
+        return Response({
+            'pending_conflicts': ConflictingFitmentSerializer(conflicts, many=True).data,
+            'total_pending': conflicts.count()
+        })
+
+# GET /api/data-quality/stats/
+class DataQualityStatsView(APIView):
+    """Overall system data quality metrics"""
+    def get(self, request):
+        total_raw = RawListingData.objects.count()
+        total_consensus = ConsensusFitment.objects.count()
+        high_confidence = ConsensusFitment.objects.filter(confidence_score__gte=80).count()
+        
+        return Response({
+            'raw_listings': total_raw,
+            'consensus_fitments': total_consensus,
+            'high_confidence_fitments': high_confidence,
+            'confidence_rate': (high_confidence / total_consensus * 100) if total_consensus > 0 else 0,
+            'processing_rate': (total_consensus / total_raw * 100) if total_raw > 0 else 0
+        })
+```
+
+### Phase 5: Production Implementation (Week 5)
+
+#### Quality Assurance Process
+
+**1. Testing Strategy**
+```bash
+# Start with known good part numbers
+python manage.py process_consensus_fitments --part-number "12345ABC"
+
+# Validate against existing reliable data
+python manage.py validate_consensus --compare-to-existing
+
+# Monitor confidence distribution
+python manage.py data_quality_report --confidence-breakdown
+```
+
+**2. Production Deployment**
+```bash
+# Run migrations in production
+python manage.py migrate --settings=settings.production
+
+# Process existing raw data
+python manage.py process_consensus_fitments --all --min-listings 3
+
+# Set up monitoring
+python manage.py setup_consensus_monitoring
+```
+
+**3. Ongoing Maintenance**
+```bash
+# Daily: Process new raw listings
+python manage.py process_consensus_fitments --new-data-only
+
+# Weekly: Review conflicts
+python manage.py review_fitment_conflicts --generate-report
+
+# Monthly: Data quality analysis
+python manage.py consensus_quality_analysis --export-csv
+```
+
+## Success Metrics
+
+### Data Quality Indicators
+- **Coverage Rate**: % of part numbers with consensus fitments
+- **Confidence Distribution**: Ratio of high/medium/low confidence fitments
+- **Conflict Resolution Rate**: % of conflicts resolved within 30 days
+- **Accuracy Validation**: Customer feedback on fitment accuracy
+
+### System Performance
+- **Processing Speed**: Raw listings processed per hour
+- **API Response Time**: Sub-100ms for consensus lookups
+- **Database Growth**: Sustainable growth rate without performance degradation
+
+### Business Impact
+- **Interchange Queries**: Successful "what else fits" searches
+- **Data Completeness**: Coverage of target vehicle years (2000-2015)
+- **User Adoption**: API usage growth and customer satisfaction
+
+## Example: "Quarks to Atoms" Process
+
+### Raw Data Input (Quarks)
+```
+Listing 1: "1432255e fits 2010 Ford F-150 XLT" (Business seller, 2000+ feedback)
+Listing 2: "1432255e fits 2010 Ford F-150 Regular Cab" (Individual, 50 feedback)
+Listing 3: "1432255e fits 2010 Ford F-150 XLT" (Individual, 500 feedback)
+Listing 4: "1432255e fits 2010 Ford F-150 XLT" (Business seller, 5000+ feedback)
+Listing 5: "1432255e fits 2010 Ford F-150 Lariat" (Individual, 100 feedback)
+Listing 6: "1432255e fits 2011 Ford F-150 XLT" (Individual, 25 feedback)
+```
+
+### Processing Logic
+```
+Group 1: "2010 Ford F-150 XLT" (3 listings)
+  - Weight calculation: 1.8 + 1.2 + 1.95 = 4.95
+  - Confidence: 60% (base) + 19.75% (weight bonus) = 79.75%
+  - Status: MEDIUM_CONFIDENCE
+
+Group 2: "2010 Ford F-150 Regular Cab" (1 listing)
+  - Weight: 1.0
+  - Confidence: 20% (base) + 0% (weight bonus) = 20%
+  - Status: NEEDS_REVIEW (below threshold)
+
+Group 3: "2010 Ford F-150 Lariat" (1 listing)
+  - Weight: 1.0
+  - Confidence: 20%
+  - Status: NEEDS_REVIEW
+
+Group 4: "2011 Ford F-150 XLT" (1 listing)
+  - Weight: 1.0
+  - Confidence: 20%
+  - Status: NEEDS_REVIEW + YEAR_CONFLICT_FLAG
+```
+
+### Final Output (Atoms)
+```
+ConsensusFitment: 1432255e → 2010 Ford F-150 XLT (79.75% confidence, MEDIUM_CONFIDENCE)
+ConflictingFitment: 1432255e has year conflict (2010 vs 2011) and trim conflicts requiring review
+```
+
+## Implementation Timeline
+
+- **Week 1**: Database schema, migrations, basic models
+- **Week 2**: Consensus processing engine, management commands
+- **Week 3**: Scraper integration, raw data collection testing
+- **Week 4**: API endpoints, serializers, documentation
+- **Week 5**: Production deployment, monitoring, quality assurance
+
+## Next Steps
+
+1. **Review and approve** this roadmap
+2. **Create database migrations** for new models
+3. **Implement consensus processor** core logic
+4. **Test with sample data** from existing scraper
+5. **Iterate and refine** based on real-world data patterns
+
+This system will transform your parts interchange database from a simple lookup tool into a comprehensive, self-improving intelligence system that gets more accurate over time.

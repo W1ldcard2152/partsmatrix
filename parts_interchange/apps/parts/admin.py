@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from .models import (
     Manufacturer, PartCategory, Part, InterchangeGroup, PartInterchange,
-    PartGroup, PartGroupMembership
+    PartGroup, PartGroupMembership, RawListingData, ConsensusFitment, ConflictingFitment
 )
 
 
@@ -418,3 +418,223 @@ admin.site.index_title = "Automotive Parts Interchange Management"
 
 # Performance hint for admin
 admin.site.enable_nav_sidebar = False  # Disable sidebar for better performance
+
+
+# ===== CONSENSUS-BASED FITMENT ADMIN (Phase 1) =====
+
+@admin.register(RawListingData)
+class RawListingDataAdmin(admin.ModelAdmin):
+    list_display = [
+        'part_number', 'vehicle_year', 'vehicle_make', 'vehicle_model', 
+        'seller_feedback_count', 'seller_is_business', 'quality_weight',
+        'extraction_date'
+    ]
+    list_filter = [
+        'vehicle_year', 'vehicle_make', 'seller_is_business', 
+        'is_verified_seller', 'has_oem_reference', 'extraction_date'
+    ]
+    search_fields = ['part_number', 'vehicle_make', 'vehicle_model', 'listing_title']
+    readonly_fields = ['extraction_date', 'quality_weight', 'get_fitment_signature']
+    list_per_page = ADMIN_PAGE_SIZE
+    ordering = ['-extraction_date']
+    show_full_result_count = False
+    
+    actions = ['mark_verified_seller', 'mark_has_oem_reference', 'process_consensus']
+    
+    def quality_weight(self, obj):
+        weight = obj.calculate_quality_weight()
+        if weight >= 2.0:
+            return format_html('<span style="color: green; font-weight: bold;">{:.2f}</span>', weight)
+        elif weight >= 1.5:
+            return format_html('<span style="color: orange;">{:.2f}</span>', weight)
+        else:
+            return format_html('<span style="color: red;">{:.2f}</span>', weight)
+    quality_weight.short_description = 'Quality Weight'
+    
+    def get_fitment_signature(self, obj):
+        return obj.get_fitment_signature()
+    get_fitment_signature.short_description = 'Fitment Signature'
+    
+    def mark_verified_seller(self, request, queryset):
+        updated = queryset.update(is_verified_seller=True)
+        self.message_user(request, f"Marked {updated} listings as verified seller")
+    mark_verified_seller.short_description = "Mark as verified seller"
+    
+    def mark_has_oem_reference(self, request, queryset):
+        updated = queryset.update(has_oem_reference=True)
+        self.message_user(request, f"Marked {updated} listings as having OEM reference")
+    mark_has_oem_reference.short_description = "Mark as having OEM reference"
+    
+    def process_consensus(self, request, queryset):
+        from .consensus.processor import FitmentConsensusProcessor
+        processor = FitmentConsensusProcessor()
+        
+        part_numbers = queryset.values_list('part_number', flat=True).distinct()
+        processed_count = 0
+        
+        for part_number in part_numbers:
+            result = processor.process_part_number(part_number)
+            processed_count += result.get('processed', 0)
+        
+        self.message_user(request, f"Processed consensus for {len(part_numbers)} part numbers, created/updated {processed_count} consensus fitments")
+    process_consensus.short_description = "Process consensus fitments for selected listings"
+    
+    fieldsets = (
+        ('Part Information', {
+            'fields': ('part_number',)
+        }),
+        ('Vehicle Fitment', {
+            'fields': ('vehicle_year', 'vehicle_make', 'vehicle_model', 'vehicle_trim', 'vehicle_engine')
+        }),
+        ('Source Data', {
+            'fields': ('source_ebay_item_id', 'listing_title', 'listing_price')
+        }),
+        ('Seller Information', {
+            'fields': ('seller_feedback_count', 'seller_is_business', 'is_verified_seller')
+        }),
+        ('Quality Indicators', {
+            'fields': ('has_oem_reference', 'has_detailed_description')
+        }),
+        ('Metadata', {
+            'fields': ('extraction_date', 'quality_weight', 'get_fitment_signature'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(ConsensusFitment)
+class ConsensusFitmentAdmin(admin.ModelAdmin):
+    list_display = [
+        'part_number', 'vehicle_year', 'vehicle_make', 'vehicle_model',
+        'confidence_score', 'status', 'supporting_listings_count', 
+        'production_ready', 'last_updated'
+    ]
+    list_filter = [
+        'status', 'vehicle_year', 'vehicle_make', 'last_updated'
+    ]
+    search_fields = ['part_number', 'vehicle_make', 'vehicle_model']
+    readonly_fields = ['last_updated', 'production_ready', 'get_fitment_signature']
+    list_per_page = ADMIN_PAGE_SIZE
+    ordering = ['-confidence_score', 'part_number']
+    show_full_result_count = False
+    
+    actions = ['mark_verified', 'mark_rejected', 'export_production_ready']
+    
+    def production_ready(self, obj):
+        if obj.is_production_ready():
+            return format_html('<span style="color: green; font-weight: bold;">✓ Ready</span>')
+        else:
+            return format_html('<span style="color: red;">✗ Not Ready</span>')
+    production_ready.short_description = 'Production Ready'
+    production_ready.boolean = True
+    
+    def get_fitment_signature(self, obj):
+        return obj.get_fitment_signature()
+    get_fitment_signature.short_description = 'Fitment Signature'
+    
+    def mark_verified(self, request, queryset):
+        updated = queryset.update(status='VERIFIED')
+        self.message_user(request, f"Marked {updated} consensus fitments as verified")
+    mark_verified.short_description = "Mark as manually verified"
+    
+    def mark_rejected(self, request, queryset):
+        updated = queryset.update(status='REJECTED')
+        self.message_user(request, f"Marked {updated} consensus fitments as rejected")
+    mark_rejected.short_description = "Mark as rejected/incorrect"
+    
+    def export_production_ready(self, request, queryset):
+        production_ready = queryset.filter(status__in=['HIGH_CONFIDENCE', 'VERIFIED'], confidence_score__gte=80)
+        self.message_user(request, f"Found {production_ready.count()} production-ready fitments out of {queryset.count()} selected")
+    export_production_ready.short_description = "Export production-ready fitments"
+    
+    fieldsets = (
+        ('Part Information', {
+            'fields': ('part_number',)
+        }),
+        ('Vehicle Fitment', {
+            'fields': ('vehicle_year', 'vehicle_make', 'vehicle_model', 'vehicle_trim', 'vehicle_engine')
+        }),
+        ('Consensus Metrics', {
+            'fields': ('confidence_score', 'supporting_listings_count', 'total_weight_score', 'status')
+        }),
+        ('Source Data', {
+            'fields': ('supporting_raw_listings',),
+            'classes': ('collapse',)
+        }),
+        ('Metadata', {
+            'fields': ('last_updated', 'production_ready', 'get_fitment_signature'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    filter_horizontal = ['supporting_raw_listings']
+
+
+@admin.register(ConflictingFitment)
+class ConflictingFitmentAdmin(admin.ModelAdmin):
+    list_display = [
+        'part_number', 'conflict_description_short', 'resolution_status',
+        'conflicting_listings_count', 'created_date', 'resolved_by'
+    ]
+    list_filter = [
+        'resolution_status', 'created_date', 'resolved_date'
+    ]
+    search_fields = ['part_number', 'conflict_description', 'resolution_notes']
+    readonly_fields = ['created_date', 'conflicting_listings_count']
+    list_per_page = ADMIN_PAGE_SIZE
+    ordering = ['-created_date']
+    show_full_result_count = False
+    
+    actions = ['mark_resolved', 'mark_dismissed', 'bulk_review']
+    
+    def conflict_description_short(self, obj):
+        return obj.conflict_description[:50] + '...' if len(obj.conflict_description) > 50 else obj.conflict_description
+    conflict_description_short.short_description = 'Conflict Description'
+    
+    def conflicting_listings_count(self, obj):
+        return obj.conflicting_listings.count()
+    conflicting_listings_count.short_description = 'Listings Count'
+    
+    def mark_resolved(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(
+            resolution_status='RESOLVED',
+            resolved_date=timezone.now(),
+            resolved_by=request.user.username
+        )
+        self.message_user(request, f"Marked {updated} conflicts as resolved")
+    mark_resolved.short_description = "Mark as resolved"
+    
+    def mark_dismissed(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(
+            resolution_status='DISMISSED',
+            resolved_date=timezone.now(),
+            resolved_by=request.user.username
+        )
+        self.message_user(request, f"Dismissed {updated} conflicts as false positives")
+    mark_dismissed.short_description = "Dismiss as false positive"
+    
+    def bulk_review(self, request, queryset):
+        pending_count = queryset.filter(resolution_status='PENDING').count()
+        self.message_user(request, f"Found {pending_count} conflicts pending review out of {queryset.count()} selected")
+    bulk_review.short_description = "Review conflict status"
+    
+    fieldsets = (
+        ('Conflict Information', {
+            'fields': ('part_number', 'conflict_description')
+        }),
+        ('Resolution', {
+            'fields': ('resolution_status', 'resolved_by', 'resolved_date', 'resolution_notes')
+        }),
+        ('Source Data', {
+            'fields': ('conflicting_listings',),
+            'classes': ('collapse',)
+        }),
+        ('Metadata', {
+            'fields': ('created_date', 'conflicting_listings_count'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    filter_horizontal = ['conflicting_listings']
